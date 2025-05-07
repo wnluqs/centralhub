@@ -13,12 +13,22 @@ class Inspection extends Model
         'terminal_id',
         'zone',
         'road',
-        'spare_part_1',
-        'spare_part_2',
-        'spare_part_3',
+        'spare_parts',
         'status',
-        'photos',
-        'technician_name'
+        'photo_path',
+        'video_path',
+        'keypad_grade',
+        'screen_condition',
+        'keypad_condition',
+        'sticker_condition',
+        'solar_condition',
+        'environment_condition',
+        'technician_name',
+        'branch'
+    ];
+
+    protected $casts = [
+        'spare_parts' => 'array',
     ];
 
     public function terminal()

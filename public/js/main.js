@@ -71,29 +71,29 @@
         });
     }
 
-    // Now fetch the data and update the chart
-    fetch("/api/parking-data")
-        .then((response) => response.json())
-        .then((data) => {
-            let labels = [];
-            let paidData = [];
-            let unpaidData = [];
-            let pendingData = [];
+    // // Now fetch the data and update the chart
+    // fetch("/api/parking-data")
+    //     .then((response) => response.json())
+    //     .then((data) => {
+    //         let labels = [];
+    //         let paidData = [];
+    //         let unpaidData = [];
+    //         let pendingData = [];
 
-            data.forEach((row) => {
-                labels.push(row.minute_slot);
-                paidData.push(row.paid_count);
-                unpaidData.push(row.unpaid_count);
-                pendingData.push(row.pending_count);
-            });
+    //         data.forEach((row) => {
+    //             labels.push(row.minute_slot);
+    //             paidData.push(row.paid_count);
+    //             unpaidData.push(row.unpaid_count);
+    //             pendingData.push(row.pending_count);
+    //         });
 
-            if (window.parkingChart) {
-                window.parkingChart.data.labels = labels;
-                window.parkingChart.data.datasets[0].data = paidData; // Paid
-                window.parkingChart.data.datasets[1].data = unpaidData; // Unpaid
-                window.parkingChart.data.datasets[2].data = pendingData; // Pending
-                window.parkingChart.update();
-            }
-        })
-        .catch((error) => console.error(error));
+    //         if (window.parkingChart) {
+    //             window.parkingChart.data.labels = labels;
+    //             window.parkingChart.data.datasets[0].data = paidData; // Paid
+    //             window.parkingChart.data.datasets[1].data = unpaidData; // Unpaid
+    //             window.parkingChart.data.datasets[2].data = pendingData; // Pending
+    //             window.parkingChart.update();
+    //         }
+    //     })
+    //     .catch((error) => console.error(error));
 })(jQuery);

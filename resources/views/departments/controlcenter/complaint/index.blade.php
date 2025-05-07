@@ -33,7 +33,6 @@
                 <th>Terminal ID</th>
                 <th>Zone</th>
                 <th>Road</th>
-                <th>Photos</th>
                 <th>Remarks</th>
                 <th>Created At</th>
             </tr>
@@ -41,7 +40,7 @@
         <tbody>
             @if ($complaints->isEmpty())
             <tr>
-                <td colspan="6" class="text-center">No complaints available.</td>
+                <td colspan="5" class="text-center">No complaints available.</td>
             </tr>
             @else
             @foreach ($complaints as $complaint)
@@ -49,13 +48,6 @@
                 <td>{{ $complaint->terminal_id }}</td>
                 <td>{{ $complaint->zone }}</td>
                 <td>{{ ucfirst($complaint->road) }}</td>
-                <td>
-                    @if($complaint->photos)
-                    <img src="{{ asset('storage/' . $complaint->photos) }}" width="80">
-                    @else
-                    No Photo
-                    @endif
-                </td>
                 <td>{{ $complaint->remarks }}</td>
                 <td>{{ $complaint->created_at->format('Y-m-d H:i:s') }}</td> <!-- Format timestamp -->
             </tr>

@@ -7,20 +7,50 @@ use App\Models\Inspection;
 use App\Models\Terminal;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\InspectionsExport;
+use Carbon\Carbon;
 
 class InspectionsController extends Controller
 {
     // Updated index method to include filtering based on a "search" parameter.
     public function index(Request $request)
     {
-        $search = $request->get('search');
+        $query = Inspection::query();
 
-        $inspections = Inspection::with('terminal')
-            ->when($search, function ($query, $search) {
-                return $query->where('terminal_id', 'like', "%{$search}%");
-            })
-            ->orderBy('created_at', 'desc')  // Order by creation timestamp, newest first
-            ->get();
+        if ($request->filled('terminal_id')) {
+            $query->where('terminal_id', 'LIKE', "%{$request->terminal_id}%");
+        }
+        if ($request->filled('zone')) {
+            $query->where('zone', 'LIKE', "%{$request->zone}%");
+        }
+        if ($request->filled('road')) {
+            $query->where('road', 'LIKE', "%{$request->road}%");
+        }
+        if ($request->filled('branch')) {
+            $query->where('branch', 'LIKE', "%{$request->branch}%");
+        }
+        if ($request->filled('status')) {
+            $query->where('status', 'LIKE', "%{$request->status}%");
+        }
+        if ($request->filled('technician_name')) {
+            $query->where('technician_name', 'LIKE', "%{$request->technician_name}%");
+        }
+        // Then in your filtering
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $start = Carbon::parse($request->start_date)->startOfDay(); // 00:00:00
+            $end = Carbon::parse($request->end_date)->endOfDay();       // 23:59:59
+
+            $query->whereBetween('created_at', [$start, $end]);
+        }
+        if ($request->filled('keypad_grade')) {
+            $query->where('keypad_grade', 'LIKE', "%{$request->keypad_grade}%");
+        }
+
+        // Sorting
+        $sortField = $request->input('sort_field', 'created_at');
+        $sortOrder = $request->input('sort_order', 'desc');
+        $query->orderBy($sortField, $sortOrder);
+
+        $inspections = $query->paginate(10); // 10 records per page
 
         return view('departments.technical.inspection.index', compact('inspections'));
     }
@@ -28,24 +58,27 @@ class InspectionsController extends Controller
     public function create()
     {
         $statusOptions = ['Complete' => 'Complete', 'Failed' => 'Failed', 'Almost' => 'Almost'];
-        $terminals = Terminal::all(); // Fetch all terminals from the database
-
-        // Define spare parts options
+        $terminals = Terminal::all(); // ✅ Required for terminal dropdown
         $spareParts = [
-            'Broken Meter' => 'Broken Meter',
-            'Receipt Output Malfunction' => 'Receipt Output Malfunction',
-            'Buttons Malfunction' => 'Buttons Malfunction',
-            'Paper Jam' => 'Paper Jam',
-            'Screen Damage' => 'Screen Damage'
+            'Broken Meter',
+            'Receipt Output Malfunction',
+            'Buttons Malfunction',
+            'Paper Jam',
+            'Screen Damage'
         ];
 
         $roads = ['Jalan Himalaya', 'Jalan Ampang', 'Jalan Bukit Tinggi', 'Jalan Starlight'];
-        $zones = ['Kuala Penyu', 'Kuala Lipis', 'Maran', 'Raub', 'Kampar', 'Beaufort']; // or fetch from DB if needed
-
-        // Define technician names as a dropdown list
+        $zones = ['Kuala Penyu', 'Kuala Lipis', 'Maran', 'Raub', 'Kampar', 'Beaufort'];
         $technicians = ['Adam', 'James', 'Phill', 'Danish', 'Hannah', 'Dwayne'];
 
-        return view('departments.technical.inspection.create', compact('statusOptions', 'terminals', 'spareParts', 'roads', 'zones', 'technicians'));
+        return view('departments.technical.inspection.create', compact(
+            'statusOptions',
+            'terminals',
+            'spareParts',
+            'roads',
+            'zones',
+            'technicians'
+        ));
     }
 
     public function store(Request $request)
@@ -54,32 +87,45 @@ class InspectionsController extends Controller
             'terminal_id'     => 'required|exists:terminals,id',
             'zone'            => 'required|string',
             'road'            => 'required|string',
-            'spare_part_1'    => 'nullable|string',
-            'spare_part_2'    => 'nullable|string',
-            'spare_part_3'    => 'nullable|string',
+            'spare_parts'     => 'nullable|array',
+            'spare_parts.*'   => 'string',
             'status'          => 'required|in:Complete,Failed,Almost',
+            'branch'          => 'required|string|in:Kuantan,Machang,Kuala Terengganu',
+            'screen_condition' => 'nullable|string',
+            'keypad_condition' => 'nullable|string',
+            'sticker_condition' => 'nullable|string',
+            'solar_condition' => 'nullable|string',
+            'environment_condition' => 'nullable|string',
             'technician_name' => 'required|string',
-            'photos'          => 'nullable|file|mimes:jpeg,png,jpg,mp4,mov,avi|max:20480',
-            'video'           => 'nullable|file|mimes:mp4,mov,avi|max:20480'
+            'photo_path.*' => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
+            'video_path'      => 'nullable|file|mimes:mp4,mov,avi|max:20480',
+            'keypad_grade'     => 'nullable|in:A,B,C',
         ]);
 
-        // Process file uploads if present.
-        if ($request->hasFile('photos')) {
-            $validated['photos'] = $request->file('photos')->store('inspection_photos', 'public');
-        }
-        if ($request->hasFile('video')) {
-            $validated['video'] = $request->file('video')->store('inspection_videos', 'public');
+        $photoPaths = [];
+        if ($request->hasFile('photo_path')) {
+            foreach ($request->file('photo_path') as $photo) {
+                $photoPaths[] = $photo->store('inspection_photos', 'public');
+            }
+            $validated['photo_path'] = json_encode($photoPaths);
         }
 
-        // Create the inspection record in the database.
+        if ($request->hasFile('video_path')) {
+            $validated['video_path'] = $request->file('video_path')->store('inspection_videos', 'public');
+        }
+
         Inspection::create($validated);
 
-        // Return a JSON response if the request expects JSON, else do a redirect.
-        if ($request->wantsJson()) {
+
+        // Smart response based on request type
+        if ($request->expectsJson()) {
             return response()->json(['message' => 'Inspection created successfully!'], 200);
+        } else {
+            return redirect()->route('inspections.index')
+                ->with('success', 'Inspection created successfully!');
         }
-        return redirect()->route('inspections.index')->with('success', 'Inspection created successfully!');
     }
+
 
     public function edit($id)
     {
@@ -95,22 +141,34 @@ class InspectionsController extends Controller
             'terminal_id'     => 'required|exists:terminals,id',
             'zone'            => 'required|string',
             'road'            => 'required|string',
-            'spare_part_1'    => 'nullable|string',
-            'spare_part_2'    => 'nullable|string',
-            'spare_part_3'    => 'nullable|string',
+            'spare_parts'     => 'nullable|array',
+            'spare_parts.*'   => 'string',
             'status'          => 'required|in:Complete,Failed,Almost',
+            'branch'          => 'required|string|in:Kuantan,Machang,Kuala Terengganu',
             'technician_name' => 'required|string',
-            'notes'           => 'nullable|string',
-            // IMPORTANT: Change from 'image' to 'file', and allow video formats
-            // Also note 'max:20480' = 20 MB in kilobytes. Increase/decrease as needed.
-            'photos'          => 'nullable|file|mimes:jpeg,png,jpg,mp4,mov,avi|max:20480'
+            'photo_path'      => 'nullable|file|mimes:jpeg,png,jpg,heic,heif|max:20480',
+            'video_path'      => 'nullable|file|mimes:mp4,mov,avi|max:20480',
+            'spare_grade'     => 'nullable|in:A,B,C',
+            'screen_condition' => 'nullable|string',
+            'keypad_condition' => 'nullable|string',
+            'sticker_condition' => 'nullable|string',
+            'solar_condition' => 'nullable|string',
+            'environment_condition' => 'nullable|string',
         ]);
-        if ($request->hasFile('photos')) {
-            $validated['photos'] = $request->file('photos')->store('inspection_photos', 'public');
+
+        if ($request->hasFile('photo_path')) {
+            $validated['photo_path'] = $request->file('photo_path')->store('inspection_photos', 'public');
         }
+
+        if ($request->hasFile('video_path')) {
+            $validated['video_path'] = $request->file('video_path')->store('inspection_videos', 'public');
+        }
+
         $inspection->update($validated);
+
         return redirect()->route('inspections.index')->with('success', 'Inspection updated successfully!');
     }
+
 
     public function destroy($id)
     {
@@ -140,6 +198,32 @@ class InspectionsController extends Controller
             ->get();
 
         // Return a JSON response instead of a Blade view:
-        return response()->json($inspections);
+        return response()->json([
+            'status' => 'success',
+            'data' => $inspections
+        ]);
+    }
+
+    public function show($id)
+    {
+        $inspection = Inspection::findOrFail($id);
+        return view('departments.technical.inspection.show', compact('inspection'));
+    }
+
+    public function updateSpotcheck(Request $request, $id)
+    {
+        $inspection = Inspection::findOrFail($id);
+
+        if ($request->has('spotcheck_verified')) {
+            $inspection->spotcheck_verified = 'Checked';
+            $inspection->spotcheck_verified_by = $request->has('spotcheck_verified') ? auth()->user()->name : null;
+        } else {
+            $inspection->spotcheck_verified = null;
+            $inspection->spotcheck_verified_by = null;
+        }
+
+        $inspection->save();
+
+        return back()->with('success', 'Spotcheck updated.');
     }
 }

@@ -1,28 +1,108 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <h2>Inspection Details</h2>
+    <div class="container">
+        <a href="{{ route('inspections.index') }}" class="btn btn-secondary mb-3">
+            ← Back to Inspections
+        </a>
 
-    <p><strong>Terminal ID:</strong> {{ $inspection->terminal_id }}</p>
-    <p><strong>Zone:</strong> {{ $inspection->zone }}</p>
-    <p><strong>Road:</strong> {{ $inspection->road }}</p>
-    <p><strong>Technician:</strong> {{ $inspection->technician_name }}</p>
-    <p><strong>Status:</strong> <span class="badge badge-{{ strtolower($inspection->status) }}">{{ $inspection->status
-            }}</span></p>
+        <h1>Inspection Details</h1>
 
-    <h4>Spare Parts Used</h4>
-    <ul>
-        <li>{{ $inspection->spare_part_1 }}</li>
-        <li>{{ $inspection->spare_part_2 }}</li>
-        <li>{{ $inspection->spare_part_3 }}</li>
-    </ul>
+        <table class="table table-bordered">
+            <tr>
+                <th>Terminal ID</th>
+                <td>{{ $inspection->terminal_id }}</td>
+            </tr>
+            <tr>
+                <th>Zone</th>
+                <td>{{ $inspection->zone }}</td>
+            </tr>
+            <tr>
+                <th>Road</th>
+                <td>{{ $inspection->road }}</td>
+            </tr>
+            <tr>
+                <th>Branch</th>
+                <td>{{ $inspection->branch }}</td>
+            </tr>
+            <tr>
+                <th>Spare Parts</th>
+                <td>{{ implode(', ', (array) $inspection->spare_parts) }}</td>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td>{{ $inspection->status }}</td>
+            </tr>
+            <tr>
+                <th>Technician</th>
+                <td>{{ $inspection->technician_name }}</td>
+            </tr>
+            <tr>
+                <th>Screen Condition</th>
+                <td>{{ $inspection->screen_condition }}</td>
+            </tr>
+            <tr>
+                <th>Keypad Condition</th>
+                <td>{{ $inspection->keypad_condition }}</td>
+            </tr>
+            <tr>
+                <th>Sticker Condition</th>
+                <td>{{ $inspection->sticker_condition }}</td>
+            </tr>
+            <tr>
+                <th>Solar Condition</th>
+                <td>{{ $inspection->solar_condition }}</td>
+            </tr>
+            <tr>
+                <th>Environment Condition</th>
+                <td>{{ $inspection->environment_condition }}</td>
+            </tr>
 
-    <h4>Inspection Photos</h4>
-    @foreach(json_decode($inspection->photos, true) as $photo)
-    <img src="{{ asset('storage/' . $photo) }}" class="img-fluid mb-3" width="300">
-    @endforeach
-
-    <a href="{{ route('inspections.index') }}" class="btn btn-secondary">Back</a>
-</div>
+            <tr>
+                <th>Photo</th>
+                <td style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    @if ($inspection->photo_path)
+                        @php $photos = json_decode($inspection->photo_path, true); @endphp
+                        @if (is_array($photos))
+                            @foreach ($photos as $photo)
+                                <a href="{{ asset('storage/' . $photo) }}" data-lightbox="inspection-gallery">
+                                    <img src="{{ asset('storage/' . $photo) }}" alt="Photo" class="img-thumbnail"
+                                        style="width: 100px; height: auto;">
+                                </a>
+                            @endforeach
+                        @else
+                            <a href="{{ asset('storage/' . $inspection->photo_path) }}" data-lightbox="inspection-gallery">
+                                <img src="{{ asset('storage/' . $inspection->photo_path) }}" alt="Photo"
+                                    class="img-thumbnail" style="width: 100px; height: auto;">
+                            </a>
+                        @endif
+                    @else
+                        -
+                    @endif
+                </td>
+            </tr>
+            <tr>
+                <th>Video</th>
+                <td>
+                    @if ($inspection->video_path)
+                        <video controls style="max-width: 400px;">
+                            <source src="{{ asset('storage/' . $inspection->video_path) }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    @else
+                        <p>No Video Uploaded</p>
+                    @endif
+                </td>
+            </tr>
+        </table>
+    </div>
 @endsection
+
+{{-- Lightbox2 Assets Only for This Page --}}
+@push('styles')
+<link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet">
+@endpush
+
+@push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
+@endpush

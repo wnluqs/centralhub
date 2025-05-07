@@ -17,11 +17,6 @@ class LoginController extends Controller
             'password' => 'required'
         ]);
 
-        // Debug printing - ADD THESE LINES
-        print('RESPONSE BODY: ${response.body}');
-        print('STATUS CODE: ${response.statusCode}');
-        print('RESPONSE HEADERS: ${response.headers}');
-
         // Get user by email
         $user = User::where('email', $request->email)->first();
 

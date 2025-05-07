@@ -1758,7 +1758,7 @@ pre code {
     padding: 1.55rem;
     vertical-align: top;
     border-top: 1px solid #10e662;
-    background-color: rgb(1 140 7 / 58%);
+    background-color: rgba(8, 8, 8, 0.58);
 }
 .table thead th {
     background-color: #0f9d58; /* a darker green */
@@ -7058,7 +7058,7 @@ button.bg-dark:focus {
 }
 
 .bg-white {
-    background-color: #fff !important;
+    background-color: #808080 !important;
 }
 
 .bg-transparent {
@@ -10469,7 +10469,7 @@ a.text-secondary:focus {
 }
 
 .text-success {
-    color: #28a745 !important;
+    color: #FFFFED !important;
 }
 
 a.text-success:hover,
@@ -10696,7 +10696,7 @@ h5,
     line-height: 1.5;
     font-weight: 400;
     font-family: "Poppins", Arial, sans-serif;
-    color: #000;
+    color: #0000FF;
 }
 
 .img {
@@ -11107,4 +11107,34 @@ a[data-toggle="collapse"] {
     color: white;
     padding: 5px;
     border-radius: 4px;
+}
+
+/* Make ALL options black even without hovering */
+.select2-container--bootstrap4 .select2-results__option {
+    color: black !important;
+}
+
+/* When highlighted/hovered, blue background and white text */
+.select2-container--bootstrap4 .select2-results__option--highlighted[aria-selected] {
+    background-color: #007bff !important;
+    color: white !important;
+}
+
+/* Fix the selected box itself */
+.select2-container--bootstrap4 .select2-selection--single {
+    height: 38px !important;
+    padding: 6px 12px;
+    background-color: #ffffff !important;
+    border: 1px solid #ced4da !important;
+    border-radius: 4px !important;
+    color: #212529 !important;
+    display: flex;
+    align-items: center;
+}
+
+/* Optional: Dropdown background */
+.select2-container--bootstrap4 .select2-dropdown {
+    background-color: white !important;
+    color: black !important;
+    border: 1px solid #ced4da !important;
 }

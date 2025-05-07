@@ -13,13 +13,27 @@ class Complaint extends Model
         'terminal_id',
         'zone',
         'road',
-        'photos',
         'remarks',
-        'status'
+        'photos',
+        'status',
+        'assigned_to',
+        'types_of_damages',
+        'attended_at',
+        'fixed_at',
+    ];
+
+    protected $casts = [
+        'attended_at' => 'datetime',
+        'fixed_at' => 'datetime',
     ];
 
     public function terminal()
     {
         return $this->belongsTo(Terminal::class);
+    }
+
+    public function technician()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 }

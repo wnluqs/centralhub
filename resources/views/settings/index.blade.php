@@ -21,6 +21,8 @@
                 <th>Name</th>
                 <th>Email</th>
                 <th>Roles</th>
+                <th>Staff ID</th>
+                <th>Branch</th> {{-- ✅ New --}}
                 <th>Actions</th>
             </tr>
         </thead>
@@ -30,6 +32,8 @@
                 <td>{{ $user->name }}</td>
                 <td>{{ $user->email }}</td>
                 <td>{{ implode(', ', $user->getRoleNames()->toArray()) }}</td>
+                <td>{{ $user->staff_id ?? '-' }}</td>
+                <td>{{ $user->branch ?? '-' }}</td> {{-- ✅ New --}}
                 <td>
                     <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-warning btn-sm">Edit</a>
                     <form action="{{ route('admin.users.destroy', $user) }}" method="POST"

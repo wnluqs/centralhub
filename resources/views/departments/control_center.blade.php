@@ -39,9 +39,17 @@
 
         <!-- Icon 4: Other Features (Patrol / Action Logs) -->
         <div class="col-md-4 mb-4">
-            <a href="{{ route('technical.audit') }}" class="dashboard-card">
+            <a href="{{ route('controlcenter.bts.index') }}" class="dashboard-card">
                 <img src="{{ asset('images/controlcenter/patrol.png') }}" alt="Action Icon">
                 <h5>Buku Tindakan Segera</h5>
+            </a>
+        </div>
+
+        <!-- Icon 5: Call Inbound -->
+        <div class="col-md-4 mb-4">
+            <a href="{{ route('controlcenter.callinbound.index') }}" class="dashboard-card">
+                <img src="{{ asset('images/controlcenter/callinbound.png') }}" alt="Call Inbound Icon">
+                <h5>Call Inbound</h5>
             </a>
         </div>
     </div>

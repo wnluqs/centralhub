@@ -10,10 +10,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\ParkingRecordController;
-use App\Http\Controllers\ParkingEntryController;
-use App\Http\Controllers\OnSiteProjectController;
 use App\Http\Controllers\TerminalParkingController;
-use App\Http\Controllers\SummaryReportController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\InspectionsController;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\ComplaintsController;
@@ -21,6 +19,12 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleManagementController;
 use App\Http\Controllers\WfhRequestController; // Newly added WFH controller
 use App\Http\Controllers\SupportController;
+use App\Http\Controllers\LocalReportController; // Newly added Local Report controller
+use App\Http\Controllers\FTLTController; // Newly added FTLT controller
+use App\Http\Controllers\BTSController; // Newly added BTS controller
+use App\Http\Controllers\TerminalController; // Newly added Terminal controller
+use App\Http\Controllers\LocationController; // Newly added Location controller 5 May 2025
+use App\Http\Controllers\CallInboundController; // Newly added Call Inbound controller on 5th May 2025 CC
 
 // ---------------------------------------------------------------------
 // Models
@@ -165,7 +169,6 @@ Route::prefix('hr')->group(function () {
 // ---------------------------------------------------------------------
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/parking-records', [ParkingRecordController::class, 'index']);
-Route::get('/api/parking-data', [ParkingEntryController::class, 'getParkingData']);
 
 // ---------------------------------------------------------------------
 // Technical Department (Prefixed) Routes
@@ -175,7 +178,7 @@ Route::prefix('technical')->group(function () {
         return view('departments.technical');
     })->name('technical.dashboard');
 
-    Route::get('/summary', [SummaryReportController::class, 'index'])->name('technical-summary');
+    Route::get('/report', [ReportController::class, 'index'])->name('technical-report');
     Route::get('/inspections', [InspectionsController::class, 'index'])->name('technical-inspections');
     Route::get('/complaint', [ComplaintsController::class, 'index'])->name('technical-complaints');
     Route::get('/terminal-parking', [TerminalParkingController::class, 'index'])->name('technical.terminal_parking');
@@ -185,17 +188,60 @@ Route::prefix('technical')->group(function () {
     Route::get('/something-else', function () {
         return view('departments.technical.something.index');
     })->name('technical.something_else');
+
+    // Local Report Routes
+    Route::get('/local_report', [LocalReportController::class, 'index'])->name('technical-local_report');
+    Route::get('/local_report/create', [LocalReportController::class, 'create'])->name('technical-local_report.create');
+    Route::post('/local_report', [LocalReportController::class, 'store'])->name('technical-local_report.store');
+
+    // FTLT Routes
+    Route::get('/technical/ftlt', [FTLTController::class, 'index'])->name('ftlt.index');
+    Route::get('/technical/ftlt/create', [FTLTController::class, 'create'])->name('ftlt.create');
+    Route::post('/technical/ftlt', [FTLTController::class, 'store'])->name('ftlt.store');
+    Route::get('/technical/ftlt/{id}/checkout', [FTLTController::class, 'checkoutForm'])->name('ftlt.checkout');
+    Route::post('/technical/ftlt/{id}/checkout', [FTLTController::class, 'checkoutSubmit'])->name('ftlt.checkout.submit');
+
+    // BTS Routes
+    Route::get('/technical/bts', [BTSController::class, 'index'])->name('bts.index');
+    Route::get('/technical/bts/create', [BTSController::class, 'create'])->name('bts.create');
+    Route::post('/technical/bts', [BTSController::class, 'store'])->name('bts.store');
+    Route::get('/technical/bts/{id}/attend', [BTSController::class, 'attend'])->name('bts.attend');
+    Route::put('/technical/bts/{id}/update-attend', [BTSController::class, 'updateAttend'])->name('bts.updateAttend');
+    Route::get('/technical/bts/search-terminals', [BTSController::class, 'searchTerminals'])->name('bts.searchTerminals');
+    Route::put('/technical/bts/{id}/verify', [BTSController::class, 'verify'])->name('bts.verify');
+    Route::put('/technical/bts/{id}/reassign', [BTSController::class, 'reassign'])->name('bts.reassign');
+
+    //Complaint Routes for TECHNICAL
+    Route::put('/complaints/{id}/mark-fixed', [ComplaintsController::class, 'markFixed'])->name('complaints.markFixed');
+    Route::get('/complaints/{id}/mark-fixed', [ComplaintsController::class, 'markAsFixed'])->name('complaints.markFixed');
 });
 
 // ---------------------------------------------------------------------
 // Control Center Department (Prefixed) Routes
 // ---------------------------------------------------------------------
-Route::prefix('controlcenter')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('departments.control_center');
-    })->name('departments.controlcenter');
+Route::prefix('controlcenter')->middleware(['auth', 'checkRole:Admin|ControlCenter'])->group(function () {
+    Route::get('/dashboard', fn() => view('departments.control_center'))->name('departments.controlcenter');
 
+    // Call Inbound Management (manual CRUD routes)
+    Route::get('/call-inbound', [CallInboundController::class, 'index'])->name('controlcenter.callinbound.index');
+    Route::get('/call-inbound/create', [CallInboundController::class, 'create'])->name('controlcenter.callinbound.create');
+    Route::post('/call-inbound', [CallInboundController::class, 'store'])->name('controlcenter.callinbound.store');
+    Route::get('/call-inbound/{id}/edit', [CallInboundController::class, 'edit'])->name('controlcenter.callinbound.edit');
+    Route::put('/call-inbound/{id}', [CallInboundController::class, 'update'])->name('controlcenter.callinbound.update');
+    Route::delete('/call-inbound/{id}', [CallInboundController::class, 'destroy'])->name('controlcenter.callinbound.destroy');
+    Route::get('/call-inbound/export', [CallInboundController::class, 'export'])->name('controlcenter.callinbound.export');
+
+
+    // Complaints
     Route::get('/complaint', [ComplaintsController::class, 'index'])->name('controlcenter-complaints');
+    Route::get('/complaint/{id}/assign', [ComplaintsController::class, 'assign'])->name('complaints.assign');
+    Route::put('/complaint/{id}/assign', [ComplaintsController::class, 'assignUpdate'])->name('complaints.assign.update');
+    Route::get('/complaints/{id}/reassign', [ComplaintsController::class, 'reassign'])->name('complaints.reassign');
+    Route::post('/complaints/{id}/reassign', [ComplaintsController::class, 'reassignUpdate'])->name('complaints.reassign.update');
+
+    // BTS View (Shared)
+    Route::get('/bts', [BTSController::class, 'controlCenterView'])->name('controlcenter.bts.index');
+    Route::get('/bts/{id}/verify', [BTSController::class, 'verify'])->name('bts.controlcenter.verify');
 });
 
 // ---------------------------------------------------------------------
@@ -205,13 +251,13 @@ Route::get('/technical/terminal-parking', [TerminalParkingController::class, 'in
 Route::get('/technical/terminal-parking/export-csv', [TerminalParkingController::class, 'exportCSV'])->name('technical.terminal_parking.export.csv');
 Route::get('/technical/terminal-parking/export-excel', [TerminalParkingController::class, 'exportExcel'])->name('technical.terminal_parking.export.excel');
 
-Route::resource('summary', SummaryReportController::class)->except(['show']);
+Route::resource('report', ReportController::class)->except(['show']);
 
 // ---------------------------------------------------------------------
 // Export Routes (CSV & Excel)
 // ---------------------------------------------------------------------
-Route::get('/summary/export-csv', [SummaryReportController::class, 'exportCSV'])->name('summary.export.csv');
-Route::get('/summary/export-excel', [SummaryReportController::class, 'exportExcel'])->name('summary.export.excel');
+Route::get('/report/export-csv', [ReportController::class, 'exportCSV'])->name('report.export.csv');
+Route::get('/report/export-excel', [ReportController::class, 'exportExcel'])->name('report.export.excel');
 
 Route::get('/inspections/export/csv', [InspectionsController::class, 'exportCsv'])->name('inspections.export.csv');
 Route::get('/inspections/export/excel', [InspectionsController::class, 'exportExcel'])->name('inspections.export.excel');
@@ -232,3 +278,20 @@ Route::post('/logout', function () {
 // ---------------------------------------------------------------------
 Route::resource('complaints', ComplaintsController::class);
 Route::resource('inspections', InspectionsController::class);
+
+// Terminal for Fetching Branches based on Terminal ID IF WORKS
+Route::get('/terminals-by-branch', [TerminalController::class, 'terminalsByBranch'])->name('terminals.byBranch');
+// Terminal for Fetching Zones and Roads based on Branch ID
+Route::get('/zones/{branch}', [LocationController::class, 'getZonesByBranch']);
+Route::get('/roads/{zoneId}', [LocationController::class, 'getRoadsByZone']);
+Route::get('/roads/{zone}', [LocationController::class, 'getRoadsByZone']);
+
+//Terminal Search easy for users to find terminals specific
+Route::get('/terminals/search', [TerminalController::class, 'search'])->name('terminals.search');
+
+// API route for Terminal Search
+Route::get('/api/terminals/search', [TerminalController::class, 'search'])->name('terminals.search');
+
+Route::patch('/inspections/{id}/spotcheck', [InspectionsController::class, 'updateSpotcheck'])
+    ->middleware('auth', 'checkRole:Admin')
+    ->name('inspections.spotcheck');

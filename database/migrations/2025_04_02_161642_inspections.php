@@ -18,19 +18,30 @@ return new class extends Migration {
             $table->string('zone')->nullable();
             $table->string('road')->nullable();
 
-            // Spare Part 1, 2, 3
-            $table->string('spare_part_1')->nullable();
-            $table->string('spare_part_2')->nullable();
-            $table->string('spare_part_3')->nullable();
+            // NEW: Unified Spare Parts (JSON field)
+            $table->json('spare_parts')->nullable();
 
             // Status
             $table->enum('status', ['Complete', 'Failed', 'Almost']);
 
-            // Photos
-            $table->string('photos')->nullable(); // store file path
+            // NEW: Separate Photo and Video Fields + Grading
+            $table->string('photo_path')->nullable();
+            $table->string('video_path')->nullable();
+            $table->enum('spare_grade', ['A', 'B', 'C'])->nullable();
 
             // Technician Name
             $table->string('technician_name')->nullable();
+
+            // NEW: Optional branch assignment if needed per inspection (redundant if fetched from user)
+            $table->string('branch')->nullable();
+            // 7 New Fields
+            $table->string('screen')->nullable();
+            $table->string('keypad')->nullable();
+            $table->string('sticker')->nullable();
+            $table->string('solar')->nullable();
+            $table->string('environment')->nullable();
+            $table->string('spotcheck_verified')->nullable(); // or use boolean if only true/false
+            $table->string('spotcheck_verified_by')->nullable();
 
             $table->timestamps();
         });

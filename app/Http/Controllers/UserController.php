@@ -38,7 +38,9 @@ class UserController extends Controller
         // Validate the request (you can extract these rules to a FormRequest)
         $request->validate([
             'name'     => 'required|string|max:255',
+            'branch' => 'required|string|in:Kuantan,Kuala Terengganu,Machang',// ✅ Add validation for branch
             'email'    => 'required|string|email|max:255|unique:users',
+            'staff_id' => 'nullable|string|unique:users,staff_id',
             'password' => 'required|string|min:6|confirmed',
             'roles'    => 'nullable|array',
             'roles.*'  => 'string|exists:roles,name'
@@ -48,6 +50,8 @@ class UserController extends Controller
         $user = User::create([
             'name'     => $request->name,
             'email'    => $request->email,
+            'staff_id' => $request->staff_id, // ✅ Add this line
+            'branch'   => $request->branch, // ✅ Add this
             'password' => Hash::make($request->password),
         ]);
 
@@ -78,19 +82,21 @@ class UserController extends Controller
     {
         // Validate input
         $request->validate([
-            'name'  => 'required|string|max:255',
-            'email' => [
+            'name'     => 'required|string|max:255',
+            'branch'   => 'required|string|in:Kuantan,Kuala Terengganu,Machang',
+            'email'    => [
                 'required',
                 'string',
                 'email',
                 'max:255',
                 Rule::unique('users')->ignore($user->id),
             ],
-            // Password is optional on update; update only if provided
+            'staff_id' => ['nullable', 'string', Rule::unique('users', 'staff_id')->ignore($user->id)],
             'password' => 'nullable|string|min:6|confirmed',
             'roles'    => 'nullable|array',
-            'roles.*'  => 'string|exists:roles,name'
+            'roles.*'  => 'string|exists:roles,name',
         ]);
+
 
         // Update user details
         $user->name  = $request->name;

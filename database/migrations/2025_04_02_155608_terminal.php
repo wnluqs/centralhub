@@ -9,6 +9,7 @@ return new class extends Migration {
     {
         Schema::create('terminals', function (Blueprint $table) {
             $table->string('id')->primary(); // Terminal ID as string, e.g., "VS001"
+            $table->string('branch')->nullable();
             $table->timestamps();
         });
     }

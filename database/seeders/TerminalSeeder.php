@@ -9,13 +9,58 @@ class TerminalSeeder extends Seeder
 {
     public function run()
     {
-        Terminal::insert([
-            ['id' => 'VS001', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 'UK001', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 'BA001', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 'VS002', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 'UK002', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 'BA002', 'created_at' => now(), 'updated_at' => now()],
-        ]);
+        $terminals = [];
+
+        // KUANTAN: KN1A01 - KN9A99
+        for ($i = 1; $i <= 9; $i++) {
+            for ($j = 1; $j <= 99; $j++) {
+                $terminals[] = [
+                    'id' => sprintf('KN%dA%02d', $i, $j),
+                    'branch' => 'Kuantan',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+        }
+
+        // KUANTAN: KN1B01 - KN1B64
+        for ($j = 1; $j <= 64; $j++) {
+            $terminals[] = [
+                'id' => sprintf('KN1B%02d', $j),
+                'branch' => 'Kuantan',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
+        // MACHANG: M01A01 - M01A47
+        for ($j = 1; $j <= 47; $j++) {
+            $terminals[] = [
+                'id' => sprintf('M01A%02d', $j),
+                'branch' => 'Machang',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
+        // KUALA TERENGGANU multiple prefixes
+        $ktPrefixes = [
+            ['prefix' => 'N01A', 'count' => 37],
+            ['prefix' => 'P01A', 'count' => 34],
+            ['prefix' => 'T01A', 'count' => 88],
+        ];
+
+        foreach ($ktPrefixes as $set) {
+            for ($j = 1; $j <= $set['count']; $j++) {
+                $terminals[] = [
+                    'id' => sprintf('%s%02d', $set['prefix'], $j),
+                    'branch' => 'Kuala Terengganu',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+        }
+
+        Terminal::insert($terminals);
     }
 }

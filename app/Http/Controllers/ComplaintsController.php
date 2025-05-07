@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User; // Make sure this is at the top
 use Illuminate\Http\Request;
 use App\Models\Complaint;
 use App\Models\Terminal;
@@ -12,41 +13,49 @@ class ComplaintsController extends Controller
 {
     public function index(Request $request)
     {
-        // 1. Start a query
         $query = Complaint::query();
 
-        // 2. Filter by terminal_id if provided
         if ($request->filled('terminal_id')) {
-            // Use 'like' for partial matching
             $query->where('terminal_id', 'like', "%{$request->terminal_id}%");
         }
 
-        // 3. Filter by zone if provided
         if ($request->filled('zone')) {
-            // Use 'like' for partial matching
             $query->where('zone', 'like', "%{$request->zone}%");
         }
 
-        // 4. Retrieve the filtered results
         $complaints = $query->get();
 
-        // Check the route name to decide which view to load
+        // 🔁 If request is from Flutter (expects JSON)
+        if ($request->wantsJson()) {
+            return response()->json($complaints);
+        }
+
+        // Web view rendering
         $routeName = $request->route()->getName();
 
         if ($routeName === 'technical-complaints') {
             return view('departments.technical.complaint.index', compact('complaints'));
-        } else if ($routeName === 'controlcenter-complaints') {
+        } elseif ($routeName === 'controlcenter-complaints') {
             return view('departments.controlcenter.complaint.index', compact('complaints'));
         } else {
-            // Fallback or default view
             return view('departments.technical.complaint.index', compact('complaints'));
         }
+
+        $status = $request->get('status');
+
+        $complaints = Complaint::with('technician')
+            ->when($request->start_date, fn($q) => $q->whereDate('created_at', '>=', $request->start_date))
+            ->when($request->end_date, fn($q) => $q->whereDate('created_at', '<=', $request->end_date))
+            ->when($status, fn($q) => $q->where('status', $status))
+            ->orderByDesc('created_at')
+            ->get();
     }
+
 
     public function create()
     {
         $terminals = Terminal::all();
-        $zones = ['Kuala Penyu', 'Kuala Lipis', 'Maran', 'Raub']; // or fetch from DB if needed
+        $zones = ['Kuala Penyu', 'Kuala Lipis', 'Maran', 'Raub', 'Kampung Raja', 'Chukai', 'Bandar Permaisuri']; // or fetch from DB if needed
         $roads = ['Jalan Himalaya', 'Jalan Ampang', 'Jalan Bukit Tinggi', 'Jalan Starlight']; // or fetch from DB if needed
 
         return view('departments.technical.complaint.create', compact('zones', 'terminals', 'roads'));
@@ -59,14 +68,30 @@ class ComplaintsController extends Controller
             'zone'        => 'required|string',
             'road'        => 'required|string',
             'remarks'     => 'nullable|string',
-            'photos'      => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+            'photos.*'    => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
         ]);
 
+        // Handle photo uploads
+        $photoPaths = [];
         if ($request->hasFile('photos')) {
-            $validated['photos'] = $request->file('photos')->store('complaint_photos', 'public');
+            foreach ($request->file('photos') as $photo) {
+                $photoPaths[] = $photo->store('complaint_photos', 'public');
+            }
         }
 
-        Complaint::create($validated);
+        $validated['photos'] = json_encode($photoPaths);
+        $validated['status'] = 'New';
+        $validated['assigned_to'] = null; // Control Center will assign later
+
+        $complaint = Complaint::create($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Complaint created successfully!',
+                'data'    => $complaint
+            ], 201);
+        }
+
         return redirect()->route('complaints.index')->with('success', 'Complaint created successfully!');
     }
 
@@ -80,18 +105,29 @@ class ComplaintsController extends Controller
     public function update(Request $request, $id)
     {
         $complaint = Complaint::findOrFail($id);
+
+        $originalStatus = $complaint->status;
+
         $validated = $request->validate([
             'terminal_id' => 'required|exists:terminals,id',
             'zone'        => 'required|string',
             'road'        => 'required|string',
             'remarks'     => 'nullable|string',
-            'photos'      => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+            'status'      => 'nullable|string',
+            'types_of_damages' => 'nullable|string',
         ]);
-        if ($request->hasFile('photos')) {
-            $validated['photos'] = $request->file('photos')->store('complaint_photos', 'public');
+
+        // Update base data
+        $complaint->fill($validated);
+
+        // Handle fixed_at auto-time
+        if ($originalStatus === 'In Progress' && $request->status === 'Resolved' && !$complaint->fixed_at) {
+            $complaint->fixed_at = now(); // ✅ Automatically log end time
         }
-        $complaint->update($validated);
-        return redirect()->route('complaints.index')->with('success', 'Complaint updated successfully!');
+
+        $complaint->save();
+
+        return redirect()->route('complaints.index')->with('success', 'Complaint updated successfully.');
     }
 
     public function destroy($id)
@@ -121,5 +157,69 @@ class ComplaintsController extends Controller
             'complaints.csv',
             \Maatwebsite\Excel\Excel::CSV
         );
+    }
+
+    // Show assign form
+    public function assign($id)
+    {
+        $complaint = Complaint::findOrFail($id);
+        $technicians = User::role('Technical')->get(); // Spatie role-based
+        return view('departments.technical.complaint.assign', compact('complaint', 'technicians'));
+    }
+
+    // Handle assignment
+    public function assignUpdate(Request $request, $id)
+    {
+        $request->validate([
+            'technician_id' => 'required|exists:users,id',
+            'types_of_damages' => 'required|array',
+            'types_of_damages.*' => 'string',
+        ]);
+
+        $complaint = Complaint::findOrFail($id);
+        $complaint->assigned_to = $request->technician_id;
+        $complaint->types_of_damages = json_encode($request->types_of_damages);
+        $complaint->status = 'In Progress';
+        $complaint->attended_at = now();
+        $complaint->save();
+
+        return redirect()->route('technical-complaints')->with('success', 'Complaint assigned with multiple damages.');
+    }
+
+    // Show reassign form (same as assign)
+    public function reassign($id)
+    {
+        $complaint = Complaint::findOrFail($id);
+        $technicians = User::role('Technical')->get(); // Spatie-based role
+        return view('departments.technical.complaint.reassign', compact('complaint', 'technicians'));
+    }
+
+    // Handle reassignment
+    public function reassignUpdate(Request $request, $id)
+    {
+        $request->validate([
+            'technician_id' => 'required|exists:users,id',
+        ]);
+
+        $complaint = Complaint::findOrFail($id);
+        $complaint->assigned_to = $request->technician_id;
+        $complaint->status = 'In Progress'; // Or keep as-is depending on your logic
+        $complaint->save();
+
+        return redirect()->route('technical-complaints')->with('success', 'Complaint reassigned successfully.');
+    }
+
+    public function markAsFixed($id)
+    {
+        $complaint = Complaint::findOrFail($id);
+
+        // Only allow if currently 'In Progress'
+        if ($complaint->status === 'In Progress') {
+            $complaint->fixed_at = now(); // Set current time
+            $complaint->status = 'Resolved'; // Updated status
+            $complaint->save();
+        }
+
+        return redirect()->back()->with('success', 'Complaint marked as fixed.');
     }
 }

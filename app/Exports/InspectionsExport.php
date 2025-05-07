@@ -24,30 +24,68 @@ class InspectionsExport implements FromCollection, WithHeadings
             })
             ->orderBy('created_at', 'desc')
             ->get([
+                'id',
                 'terminal_id',
                 'zone',
                 'road',
-                'spare_part_1',
-                'spare_part_2',
-                'spare_part_3',
+                'branch',
+                'spare_parts',
                 'status',
                 'technician_name',
-                'created_at'
+                'created_at',
+                'photo_path',
+                'video_path',
+                'keypad_grade',
+                'screen_condition',
+                'keypad_condition',
+                'sticker_condition',
+                'solar_condition',
+                'environment_condition',
+                'spotcheck_verified',
+                'spotcheck_verified_by',
             ]);
     }
 
     public function headings(): array
     {
         return [
+            'ID',
             'Terminal ID',
             'Zone',
             'Road',
-            'Spare Part 1',
-            'Spare Part 2',
-            'Spare Part 3',
+            'Branch',
+            'Spare Parts',
             'Status',
-            'Technician Name',
-            'Created At'
+            'Technician',
+            'Created At',
+            'Photo Path',
+            'Video Path',
+            'Keypad Grade',
+            'Screen Condition',
+            'Keypad Condition',
+            'Sticker Condition',
+            'Solar Condition',
+            'Environment Condition',
+            'Spotcheck Verified',
+            'Spotcheck Verified By',
+        ];
+    }
+
+    public function map($inspection): array
+    {
+        return [
+            $inspection->id,
+            $inspection->terminal_id,
+            $inspection->zone,
+            $inspection->road,
+            $inspection->branch,
+            is_array($inspection->spare_parts) ? implode(', ', $inspection->spare_parts) : '',
+            $inspection->status,
+            $inspection->technician_name,
+            $inspection->created_at,
+            $inspection->photo_path,
+            $inspection->video_path,
+            $inspection->video_grade,
         ];
     }
 }
