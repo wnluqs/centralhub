@@ -36,6 +36,7 @@ class ZoneSeeder extends Seeder
             ['name' => 'Indera Mahkota 1', 'branch' => 'Kuantan'],
             ['name' => 'Indera Mahkota 2', 'branch' => 'Kuantan'],
             ['name' => 'Indera Mahkota 3', 'branch' => 'Kuantan'],
+            ['name' => 'Indera Mahkota 4', 'branch' => 'Kuantan'],
             ['name' => 'Indera Mahkota 5', 'branch' => 'Kuantan'],
             ['name' => 'Indera Mahkota 6', 'branch' => 'Kuantan'],
             ['name' => 'Indera Mahkota 7', 'branch' => 'Kuantan'],

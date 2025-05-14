@@ -51,6 +51,17 @@
             </div>
 
             <div class="form-group mb-3">
+                <label for="types_of_damages">Types of Damages</label>
+                <select name="types_of_damages[]" id="types_of_damages" class="form-control" multiple>
+                    <option value="Mesin Rosak">Mesin Rosak</option>
+                    <option value="Coin Sangkut">Coin Sangkut</option>
+                    <option value="Battery Low">Battery Low</option>
+                    <option value="Paparan Skrin">Paparan Skrin</option>
+                    <option value="Lain-lain">Lain-lain</option>
+                </select>
+            </div>
+
+            <div class="form-group mb-3">
                 <label for="remarks">Complaint Details / Remarks</label>
                 <textarea name="remarks" id="remarks" class="form-control" rows="4"></textarea>
             </div>
@@ -66,60 +77,59 @@
 @endsection
 
 @push('scripts')
-<!-- CSS & JS for Select2 -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- CSS & JS for Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-<script>
-    $(document).ready(function() {
-        $('#terminal_id').select2({
-            placeholder: 'Search Terminal ID...',
-            ajax: {
-                url: '{{ route("terminals.search") }}',
-                dataType: 'json',
-                delay: 250,
-                data: function(params) {
-                    return { q: params.term };
-                },
-                processResults: function(data) {
-                    return {
-                        results: $.map(data, function(item) {
-                            return {
-                                text: item.id,
-                                id: item.id
-                            };
-                        })
-                    };
-                },
-                cache: true
-            }
+    <script>
+        $(document).ready(function() {
+            $('#terminal_id').select2({
+                placeholder: 'Search Terminal ID...',
+                ajax: {
+                    url: '{{ route('terminals.search') }}',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: $.map(data, function(item) {
+                                return {
+                                    text: item.id,
+                                    id: item.id
+                                };
+                            })
+                        };
+                    },
+                    cache: true
+                }
+            });
         });
-    });
-</script>
+    </script>
 
-<style>
-    /* Fix dropdown text visibility */
-    .select2-container--default .select2-results__option {
-        color: black !important;
-        background-color: white !important;
-    }
+    <style>
+        /* Fix dropdown text visibility */
+        .select2-container--default .select2-results__option {
+            color: black !important;
+            background-color: white !important;
+        }
 
-    /* Fix search input text */
-    .select2-container--default .select2-search--dropdown .select2-search__field {
-        color: black !important;
-    }
+        /* Fix search input text */
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            color: black !important;
+        }
 
-    /* Dropdown styling */
-    .select2-container--default .select2-dropdown {
-        background-color: white !important;
-    }
+        /* Dropdown styling */
+        .select2-container--default .select2-dropdown {
+            background-color: white !important;
+        }
 
-    /* Fix selected value visibility */
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-        color: black !important;
-    }
-</style>
-
+        /* Fix selected value visibility */
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: black !important;
+        }
+    </style>
 @endpush
-
-

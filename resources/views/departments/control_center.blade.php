@@ -3,8 +3,8 @@
 @section('content')
 <div class="container">
     <h1>Control Center Department</h1>
-    <p style="color: beige; font-size: 20px">Welcome to the Control Center.</p>
-    <p style="color: beige; font-size: 20px">
+    <p style="color: rgb(0, 0, 0); font-size: 20px">Welcome to the Control Center.</p>
+    <p style="color: rgb(0, 0, 0); font-size: 20px">
         The Control Center handles call center operations, public complaints,
         scheduling, and more.
     </p>

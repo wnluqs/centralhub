@@ -91,11 +91,11 @@ class InspectionsController extends Controller
             'spare_parts.*'   => 'string',
             'status'          => 'required|in:Complete,Failed,Almost',
             'branch'          => 'required|string|in:Kuantan,Machang,Kuala Terengganu',
-            'screen_condition' => 'nullable|string',
-            'keypad_condition' => 'nullable|string',
-            'sticker_condition' => 'nullable|string',
-            'solar_condition' => 'nullable|string',
-            'environment_condition' => 'nullable|string',
+            'screen' => 'nullable|string',
+            'keypad' => 'nullable|string',
+            'sticker' => 'nullable|string',
+            'solar' => 'nullable|string',
+            'environment' => 'nullable|string',
             'technician_name' => 'required|string',
             'photo_path.*' => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
             'video_path'      => 'nullable|file|mimes:mp4,mov,avi|max:20480',
@@ -149,11 +149,11 @@ class InspectionsController extends Controller
             'photo_path'      => 'nullable|file|mimes:jpeg,png,jpg,heic,heif|max:20480',
             'video_path'      => 'nullable|file|mimes:mp4,mov,avi|max:20480',
             'spare_grade'     => 'nullable|in:A,B,C',
-            'screen_condition' => 'nullable|string',
-            'keypad_condition' => 'nullable|string',
-            'sticker_condition' => 'nullable|string',
-            'solar_condition' => 'nullable|string',
-            'environment_condition' => 'nullable|string',
+            'screen' => 'nullable|string',
+            'keypad' => 'nullable|string',
+            'sticker' => 'nullable|string',
+            'solar' => 'nullable|string',
+            'environment' => 'nullable|string',
         ]);
 
         if ($request->hasFile('photo_path')) {
@@ -225,5 +225,96 @@ class InspectionsController extends Controller
         $inspection->save();
 
         return back()->with('success', 'Spotcheck updated.');
+    }
+
+    public function apiStore(Request $request)
+    {
+        $validated = $request->validate([
+            'terminal_id' => 'required|exists:terminals,id',
+            'zone' => 'required|string',
+            'road' => 'required|string',
+            'spare_parts' => 'nullable|array',
+            'spare_parts.*' => 'string',
+            'status' => 'required|in:Complete,Failed,Almost',
+            'branch' => 'required|string|in:Kuantan,Machang,Kuala Terengganu',
+            'screen' => 'nullable|string',
+            'keypad' => 'nullable|string',
+            'sticker' => 'nullable|string',
+            'solar' => 'nullable|string',
+            'environment' => 'nullable|string',
+            'technician_name' => 'required|string',
+            'photo_path.*' => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
+            'video_path' => 'nullable|file|mimes:mp4,mov,avi|max:20480',
+            'keypad_grade' => 'nullable|in:A,B,C',
+        ]);
+
+        $photoPaths = [];
+        if ($request->hasFile('photo_path')) {
+            foreach ($request->file('photo_path') as $photo) {
+                $photoPaths[] = $photo->store('inspection_photos', 'public');
+            }
+            $validated['photo_path'] = json_encode($photoPaths);
+        }
+
+        if ($request->hasFile('video_path')) {
+            $validated['video_path'] = $request->file('video_path')->store('inspection_videos', 'public');
+        }
+
+        $inspection = Inspection::create($validated);
+
+        return response()->json(['message' => 'Inspection created successfully!', 'data' => $inspection], 201);
+    }
+
+    public function apiUpdate(Request $request, $id)
+    {
+        $inspection = Inspection::find($id);
+
+        if (!$inspection) {
+            return response()->json(['error' => 'Inspection not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'terminal_id' => 'sometimes|exists:terminals,id',
+            'zone' => 'sometimes|string',
+            'road' => 'sometimes|string',
+            'spare_parts' => 'nullable|array',
+            'spare_parts.*' => 'string',
+            'status' => 'sometimes|in:Complete,Failed,Almost',
+            'branch' => 'sometimes|string|in:Kuantan,Machang,Kuala Terengganu',
+            'screen' => 'nullable|string',
+            'keypad' => 'nullable|string',
+            'sticker' => 'nullable|string',
+            'solar' => 'nullable|string',
+            'environment' => 'nullable|string',
+            'technician_name' => 'sometimes|string',
+            'photo_path.*' => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
+            'video_path' => 'nullable|file|mimes:mp4,mov,avi|max:20480',
+            'keypad_grade' => 'nullable|in:A,B,C',
+        ]);
+
+        if ($request->hasFile('photo_path')) {
+            $validated['photo_path'] = $request->file('photo_path')->store('inspection_photos', 'public');
+        }
+
+        if ($request->hasFile('video_path')) {
+            $validated['video_path'] = $request->file('video_path')->store('inspection_videos', 'public');
+        }
+
+        $inspection->update($validated);
+
+        return response()->json(['message' => 'Inspection updated successfully', 'data' => $inspection->fresh()], 200);
+    }
+
+    public function apiDelete($id)
+    {
+        $inspection = Inspection::find($id);
+
+        if (!$inspection) {
+            return response()->json(['error' => 'Inspection not found'], 404);
+        }
+
+        $inspection->delete();
+
+        return response()->json(['message' => 'Inspection deleted successfully', 'id' => $id], 200);
     }
 }

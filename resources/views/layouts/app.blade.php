@@ -33,7 +33,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: url('/images/green.jpg') no-repeat center center fixed;
+            background: url('/images/white.jpg') no-repeat center center fixed;
             z-index: -1;
         }
 
@@ -43,6 +43,23 @@
             background: #fff !important;
             color: #000 !important;
             border: 1px solid #ccc !important;
+        }
+
+        /* Add bounce animation */
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        #ai-chatbot button:hover {
+            animation: bounce 0.4s ease;
         }
     </style>
 </head>
@@ -121,6 +138,51 @@
 
     @stack('scripts')
 
+    <div id="ai-chatbot" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+        <button class="btn btn-primary rounded-circle shadow" onclick="openChat()" title="Ask Assistant">
+            💬
+        </button>
+        <div id="chat-window" class="card shadow p-3"
+            style="display: none; width: 300px; position: absolute; bottom: 60px; right: 0; background: white; border-radius: 10px;">
+            <strong>AI Assistant</strong>
+            <div id="chat-messages" style="height: 200px; overflow-y: scroll; margin-top: 10px; font-size: 14px;"></div>
+            <input type="text" id="chat-input" class="form-control mt-2" placeholder="Ask something..."
+                onkeypress="if(event.key==='Enter')sendMessage()">
+        </div>
+    </div>
+    <script>
+        function openChat() {
+            const chatBox = document.getElementById("chat-window");
+            chatBox.style.display = chatBox.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function sendMessage() {
+            const input = document.getElementById("chat-input");
+            const messages = document.getElementById("chat-messages");
+            const question = input.value;
+
+            if (!question) return;
+
+            messages.innerHTML += `<div class='text-right'><b>You:</b> ${question}</div>`;
+            input.value = '';
+
+            fetch('/api/ask-bot', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        question
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    messages.innerHTML += `<div><b>Bot:</b> ${data.reply}</div>`;
+                    messages.scrollTop = messages.scrollHeight;
+                });
+        }
+    </script>
 </body>
 
 </html>

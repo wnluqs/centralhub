@@ -6,6 +6,11 @@
     </a>
 
     <div class="container">
+         @if (session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
         <h1>Inspection Records</h1>
 
         <div class="mb-3">
@@ -230,12 +235,6 @@
             </table>
             <div class="mt-3">
                 {{ $inspections->withQueryString()->links() }}
-            </div>
-        @endif
-
-        @if (session('success'))
-            <div class="alert alert-success">
-                {{ session('success') }}
             </div>
         @endif
     </div>

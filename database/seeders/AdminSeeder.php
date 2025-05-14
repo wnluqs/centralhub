@@ -20,6 +20,8 @@ class AdminSeeder extends Seeder
             [
                 'name' => 'System Admin',
                 'password' => Hash::make('admin1234'), // You can change this securely
+                'staff_id' => 'ADMIN001',
+                'branch' => 'HQ',
             ]
         );
 

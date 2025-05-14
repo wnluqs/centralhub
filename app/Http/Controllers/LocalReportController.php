@@ -97,4 +97,79 @@ class LocalReportController extends Controller
 
         return redirect()->route('technical-local_report')->with('success', 'Local report submitted successfully.');
     }
+
+    // PUT: Update existing local report
+    public function apiUpdate(Request $request, $id)
+    {
+        $report = LocalReport::find($id);
+        if (!$report) {
+            return response()->json(['error' => 'Report not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'zone' => 'sometimes|string',
+            'road' => 'sometimes|string',
+            'public_complaints' => 'nullable|array',
+            'public_others' => 'nullable|string',
+            'operations_complaints' => 'nullable|array',
+            'operations_others' => 'nullable|string',
+        ]);
+
+        // Convert arrays to JSON if present
+        if (isset($validated['public_complaints'])) {
+            $validated['public_complaints'] = json_encode($validated['public_complaints']);
+        }
+
+        if (isset($validated['operations_complaints'])) {
+            $validated['operations_complaints'] = json_encode($validated['operations_complaints']);
+        }
+
+        $report->update($validated);
+
+        return response()->json(['message' => 'Local report updated successfully', 'data' => $report->fresh()], 200);
+    }
+
+    // DELETE: Remove a local report
+    public function apiDelete($id)
+    {
+        $report = LocalReport::find($id);
+        if (!$report) {
+            return response()->json(['error' => 'Report not found'], 404);
+        }
+
+        $report->delete();
+        return response()->json(['message' => 'Local report deleted successfully', 'id' => $id]);
+    }
+
+    public function apiIndex()
+    {
+        $bts = LocalReport::latest()->get();
+        return response()->json($bts);
+    }
+
+    public function apiStore(Request $request)
+    {
+        $validated = $request->validate([
+            'zone' => 'required|string',
+            'road' => 'required|string',
+            'public_complaints' => 'nullable|array',
+            'public_others' => 'nullable|string',
+            'operations_complaints' => 'nullable|array',
+            'operations_others' => 'nullable|string',
+            'photos.*' => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
+            'videos.*' => 'nullable|file|mimes:mp4,mov,avi|max:20480',
+        ]);
+
+        $validated['technician_name'] = 'API Tester'; // For testing purposes, replace with actual user ID
+
+        // photo, video, and JSON fields processing...
+        // finally:
+        $report = LocalReport::create($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Local report created', 'data' => $report], 201); // ✅ API response
+        }
+
+        return redirect()->route('technical-local_report')->with('success', 'Local report submitted successfully.');
+    }
 }

@@ -129,4 +129,83 @@ class BTSController extends Controller
 
         return redirect()->route('bts.index')->with('success', 'BTS alert reassigned to Available Jobs.');
     }
+
+    public function apiIndex()
+    {
+        $bts = BTS::latest()->get();
+        return response()->json($bts);
+    }
+
+    public function apiStore(Request $request)
+    {
+        $validated = $request->validate([
+            'terminal_id'     => 'required|exists:terminals,id',
+            'status'          => 'required|string',
+            'location'        => 'required|string',
+            'event_date'      => 'required|date',
+            'event_code_name' => 'required|string',
+            'comment'         => 'nullable|string',
+        ]);
+
+        $validated['action_status'] = 'New';
+        $validated['action_by'] = null;
+        $validated['terminal_status'] = 'Okay';
+
+        $bts = BTS::create($validated);
+
+        return response()->json([
+            'message' => 'BTS created successfully',
+            'data' => $bts
+        ], 201);
+    }
+
+    public function apiUpdate(Request $request, $id)
+    {
+        $bts = BTS::find($id);
+        if (!$bts) {
+            return response()->json(['error' => 'BTS record not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'comment'         => 'nullable|string',
+            'parts_request'   => 'nullable|string',
+            'terminal_status' => 'nullable|in:Okay,Off',
+            'photo'           => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'terminal_id'     => 'nullable|string',
+            'status'          => 'nullable|string',
+            'location'        => 'nullable|string',
+            'event_date'      => 'nullable|date',
+            'event_code_name' => 'nullable|string',
+            'comment'         => 'nullable|string',
+        ]);
+
+        if ($request->hasFile('photo')) {
+            $validated['photo'] = $request->file('photo')->store('bts_photos', 'public');
+        }
+
+        $validated['action_status'] = 'In Progress';
+        $validated['action_by'] = auth()->id() ?? 1;
+
+        $bts->update($validated);
+
+        return response()->json([
+            'message' => 'BTS updated successfully',
+            'data' => $bts->fresh()
+        ]);
+    }
+
+    public function apiDelete($id)
+    {
+        $bts = BTS::find($id);
+        if (!$bts) {
+            return response()->json(['error' => 'BTS not found'], 404);
+        }
+
+        $bts->delete();
+
+        return response()->json([
+            'message' => 'BTS record deleted successfully',
+            'id' => $id
+        ]);
+    }
 }

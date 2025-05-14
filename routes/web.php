@@ -238,6 +238,10 @@ Route::prefix('controlcenter')->middleware(['auth', 'checkRole:Admin|ControlCent
     Route::put('/complaint/{id}/assign', [ComplaintsController::class, 'assignUpdate'])->name('complaints.assign.update');
     Route::get('/complaints/{id}/reassign', [ComplaintsController::class, 'reassign'])->name('complaints.reassign');
     Route::post('/complaints/{id}/reassign', [ComplaintsController::class, 'reassignUpdate'])->name('complaints.reassign.update');
+    Route::put('/complaints/{id}/unassign', [ComplaintsController::class, 'unassign'])->name('complaints.unassign');
+    // New for Attend flow
+    Route::get('/complaints/{id}/attend', [ComplaintsController::class, 'attend'])->name('complaints.attend');
+    Route::post('/complaints/{id}/attend', [ComplaintsController::class, 'submitAttendance'])->name('complaints.attend.submit');
 
     // BTS View (Shared)
     Route::get('/bts', [BTSController::class, 'controlCenterView'])->name('controlcenter.bts.index');

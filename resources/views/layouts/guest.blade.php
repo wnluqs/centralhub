@@ -14,18 +14,27 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <!-- Custom style for the background image -->
+    <style>
+        .bg-left {
+            background-image: url('/images/test1.png'); /* ← use forward slash here */
+            background-size: cover;
+            background-position: center;
+        }
+    </style>
 </head>
 
 <body class="font-sans text-gray-900 antialiased">
-    <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
-        <div>
-            <a href="/">
-                <img src="{{ asset('images/vista.png') }}" alt="My Brand" class="w-32 h-auto mx-auto my-4" />
-            </a>
-        </div>
+    <div class="flex min-h-screen w-full">
+        <!-- Background Left Side (75%) -->
+        <div class="w-3/4 bg-left"></div>
 
-        <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
-            {{ $slot }}
+        <!-- Right Login Card (25%) -->
+        <div class="w-1/4 flex items-center justify-center bg-white bg-opacity-90 shadow-lg">
+            <div class="w-full max-w-sm p-6">
+                {{ $slot }}
+            </div>
         </div>
     </div>
 </body>

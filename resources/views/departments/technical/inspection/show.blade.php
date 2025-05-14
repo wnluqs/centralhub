@@ -39,23 +39,23 @@
             </tr>
             <tr>
                 <th>Screen Condition</th>
-                <td>{{ $inspection->screen_condition }}</td>
+                <td>{{ $inspection->screen }}</td>
             </tr>
             <tr>
                 <th>Keypad Condition</th>
-                <td>{{ $inspection->keypad_condition }}</td>
+                <td>{{ $inspection->keypad }}</td>
             </tr>
             <tr>
                 <th>Sticker Condition</th>
-                <td>{{ $inspection->sticker_condition }}</td>
+                <td>{{ $inspection->sticker }}</td>
             </tr>
             <tr>
                 <th>Solar Condition</th>
-                <td>{{ $inspection->solar_condition }}</td>
+                <td>{{ $inspection->solar }}</td>
             </tr>
             <tr>
                 <th>Environment Condition</th>
-                <td>{{ $inspection->environment_condition }}</td>
+                <td>{{ $inspection->environment }}</td>
             </tr>
 
             <tr>

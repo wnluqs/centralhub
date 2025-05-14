@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use function Termwind\terminal;
+
 class FTLT extends Model
 {
     use HasFactory;
@@ -19,6 +21,7 @@ class FTLT extends Model
         'user_id',
         'check_in_time',
         'check_out_time',
+        'terminal_id',
     ];
 
     protected $table = 'ftlt';

@@ -10451,7 +10451,7 @@ button.bg-dark:focus {
 }
 
 .text-primary {
-    color: #007bff !important;
+    color: black !important;
 }
 
 a.text-primary:hover,
@@ -10505,7 +10505,7 @@ a.text-danger:focus {
 }
 
 .text-light {
-    color: #f8f9fa !important;
+    color: black !important;
 }
 
 a.text-light:hover,
@@ -10653,7 +10653,7 @@ body {
     line-height: 1.8;
     font-weight: normal;
     background: #fff;
-    color: white;
+    color: black;
 }
 
 a {
@@ -11137,4 +11137,10 @@ a[data-toggle="collapse"] {
     background-color: white !important;
     color: black !important;
     border: 1px solid #ced4da !important;
+}
+
+h4.text-primary {
+    font-weight: 600;
+    border-left: 4px solid #007bff;
+    padding-left: 10px;
 }

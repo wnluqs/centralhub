@@ -18,11 +18,11 @@ class Inspection extends Model
         'photo_path',
         'video_path',
         'keypad_grade',
-        'screen_condition',
-        'keypad_condition',
-        'sticker_condition',
-        'solar_condition',
-        'environment_condition',
+        'screen',
+        'keypad',
+        'sticker',
+        'solar',
+        'environment',
         'technician_name',
         'branch'
     ];

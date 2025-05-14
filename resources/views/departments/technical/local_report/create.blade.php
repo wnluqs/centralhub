@@ -4,7 +4,7 @@
 @section('content')
     <div class="container">
         <a href="{{ route('technical-local_report') }}" class="btn btn-secondary mb-3">← Back to Local Report</a>
-        <h2 class="text-primary mb-4">Hantar Laporan Setempat</h2>
+        <h2 class="text-primary mb-4 text-center fw-bold">Hantar Laporan Setempat</h2>
 
         @if ($errors->any())
             <div class="alert alert-danger">
@@ -33,7 +33,7 @@
                 </div>
                 <div class="col-md-6">
                     <label for="zone" class="form-label">Zon</label>
-                    <select name="zone" id="zone" class="form-control" required disabled>
+                    <select name="zone" id="zone" class="form-control select2" required disabled>
                         <option value="">-- Pilih Zon --</option>
                     </select>
                 </div>
@@ -76,7 +76,6 @@
                                 <option value="RORO Bin">RORO Bin</option>
                                 <option value="Crane">Crane</option>
                                 <option value="Trash Can">Trash Can</option>
-                                <option value="Semak Samun">Semak Samun</option>
                             </select>
                             <input type="number" name="public_complaints[Halangan Dalam Petak][value]" class="form-control"
                                 placeholder="Nilai (0–100)" min="0" max="100">
@@ -84,10 +83,10 @@
 
                         {{-- Isu Tambahan: Petak Parking Diturap --}}
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Petak Parking Diturap (0–100)</label>
+                            <label class="form-label fw-bold">Petak Parking Diturap (0–1000)</label>
                             <input type="hidden" name="public_complaints[Petak Parking Diturap]" value="0">
                             <input type="number" name="public_complaints[Petak Parking Diturap]" class="form-control"
-                                min="0" max="100">
+                                min="0" max="1000">
                         </div>
 
                         {{-- Peniaga/Penjaja Dalam Petak --}}
@@ -100,18 +99,18 @@
 
                         {{-- Jalan Tidak Rata/Tar Rosak --}}
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Jalan Tidak Rata/Tar Rosak (0–100)</label>
+                            <label class="form-label fw-bold">Jalan Tidak Rata/Tar Rosak (0–500)</label>
                             <input type="hidden" name="public_complaints[Jalan Tidak Rata/Tar Rosak]" value="0">
                             <input type="number" name="public_complaints[Jalan Tidak Rata/Tar Rosak]" class="form-control"
-                                min="0" max="100">
+                                min="0" max="500">
                         </div>
 
                         {{-- Garisan Petak Parking Pudar --}}
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Garisan Petak Parking Pudar (0–100)</label>
+                            <label class="form-label fw-bold">Garisan Petak Parking Pudar (0–500)</label>
                             <input type="hidden" name="public_complaints[Garisan Petak Parking Pudar]" value="0">
                             <input type="number" name="public_complaints[Garisan Petak Parking Pudar]" class="form-control"
-                                min="0" max="100">
+                                min="0" max="500">
                         </div>
 
                         {{-- Dan lain-lain --}}
@@ -126,7 +125,7 @@
 
             {{-- Operations Complaints --}}
             <div class="card mb-4">
-                <div class="card-header bg-warning text-dark">Aduan Operasi</div>
+                <div class="card-header bg-warning text-dark">Aduan Harta Operasi</div>
                 <div class="card-body bg-white rounded shadow-sm">
                     <div class="row g-3">
                         {{-- Meter Rosak --}}
@@ -250,7 +249,9 @@
     <script>
         $(document).ready(function() {
             // Disable dropdowns initially
-            $('#zone').prop('disabled', true);
+            $('#zone').prop('disabled', true).select2({
+                placeholder: '-- Pilih Zon --'
+            });
             $('#road').prop('disabled', true);
 
             // When Branch changes
@@ -266,8 +267,7 @@
                         if (zones.length > 0) {
                             $('#zone').prop('disabled', false);
                             zones.forEach(function(z) {
-                                $('#zone').append('<option value="' + z.name + '">' + z
-                                    .name + '</option>');
+                                $('#zone').append('<option value="' + z.name + '">' + z.name + '</option>');
                             });
                         } else {
                             $('#zone').append('<option value="">Tiada Zon Ditemui</option>');
