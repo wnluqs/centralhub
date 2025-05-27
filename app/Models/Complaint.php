@@ -25,6 +25,8 @@ class Complaint extends Model
     protected $casts = [
         'attended_at' => 'datetime',
         'fixed_at' => 'datetime',
+        'photos' => 'array',
+        'types_of_damages' => 'array',
     ];
 
     public function terminal()

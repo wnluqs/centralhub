@@ -13,4 +13,8 @@ class Terminal extends Model
 
     // (Optional) If your table name is not 'terminals', specify here:
     // protected $table = 'terminals';
+    public function parkingData()
+    {
+        return $this->hasOne(TerminalParking::class, 'terminal_id');
+    }
 }

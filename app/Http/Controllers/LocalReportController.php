@@ -6,17 +6,22 @@ use Illuminate\Http\Request;
 use App\Models\LocalReport;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Road;
+use App\Models\Zone;
 
 class LocalReportController extends Controller
 {
     public function index(Request $request)
     {
-        $reports = LocalReport::latest()->get();
+        $reports = LocalReport::orderByDesc('id')->get();
 
-        if ($request->wantsJson()) {
-            return response()->json($reports);
+        // If AJAX or JSON requested, return raw JSON
+        if ($request->ajax() || $request->query('json')) {
+            return response()->json([
+                'reports' => $reports,
+            ]);
         }
 
+        // Otherwise, return the Blade view
         return view('departments.technical.local_report.index', compact('reports'));
     }
 
@@ -35,11 +40,21 @@ class LocalReportController extends Controller
             'public_others' => 'nullable|string',
             'operations_complaints' => 'nullable|array',
             'operations_others' => 'nullable|string',
+            'landmark' => 'nullable|string',
+            'latitude' => 'nullable|numeric', //added on 24th May2024
+            'longitude' => 'nullable|numeric',
             'photos.*' => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
             'videos.*' => 'nullable|file|mimes:mp4,mov,avi|max:20480',
         ]);
 
+        $validated['zone'] = $request->input('zone');
+        $zoneId = $request->input('zone');
+        $zone = Zone::find($zoneId);
+        $validated['zone'] = $zone?->name ?? 'Unknown';
         $validated['technician_name'] = Auth::user()->name;
+        $validated['landmark'] = $request->input('landmark');
+        $validated['latitude'] = $request->input('latitude');
+        $validated['longitude'] = $request->input('longitude');
 
         // Process photos
         $photoPaths = [];
@@ -149,27 +164,71 @@ class LocalReportController extends Controller
 
     public function apiStore(Request $request)
     {
+        // Convert stringified JSON to actual array if coming from Flutter
+        if (is_string($request->public_complaints)) {
+            $request->merge([
+                'public_complaints' => json_decode($request->public_complaints, true)
+            ]);
+        }
+
+        if (is_string($request->operations_complaints)) {
+            $request->merge([
+                'operations_complaints' => json_decode($request->operations_complaints, true)
+            ]);
+        }
+
         $validated = $request->validate([
+            'branch' => 'required|string',
             'zone' => 'required|string',
             'road' => 'required|string',
             'public_complaints' => 'nullable|array',
             'public_others' => 'nullable|string',
             'operations_complaints' => 'nullable|array',
             'operations_others' => 'nullable|string',
-            'photos.*' => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
-            'videos.*' => 'nullable|file|mimes:mp4,mov,avi|max:20480',
+            'landmark' => 'nullable|string',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric', //added on 24th May 2024
+            'photos.*' => 'nullable|image|mimes:jpeg,png,jpg|max:20480',
+            'videos' => 'nullable|file|mimes:mp4,mov,avi|max:20480',
         ]);
 
-        $validated['technician_name'] = 'API Tester'; // For testing purposes, replace with actual user ID
+        // Convert zone ID to zone name for API input
+        $zoneId = $request->input('zone');
+        $zone = is_numeric($zoneId)
+            ? Zone::find($zoneId)
+            : Zone::where('name', $zoneId)->first();
+        $validated['zone'] = $zone?->name ?? 'Unknown';
+        $validated['technician_name'] = $request->input('technician_name');
+        $validated['landmark'] = $request->input('landmark');
+        $validated['latitude'] = $request->input('latitude');
+        $validated['longitude'] = $request->input('longitude');
 
-        // photo, video, and JSON fields processing...
-        // finally:
+        // ✅ Handle file uploads
+        $photoPath = [];
+        if ($request->hasFile('photos')) {
+            foreach ($request->file('photos') as $photo) {
+                $photoPath[] = $photo->store('local_report_photos', 'public');
+            }
+        }
+        $validated['photos'] = json_encode($photoPath);
+
+        $videoPath = null;
+        if ($request->hasFile('videos')) {
+            $videoPath = $request->file('videos')->store('local_report_videos', 'public');
+        }
+        $validated['videos'] = json_encode($videoPath ? [$videoPath] : []);
+
+        // Re-encode for storage
+        $validated['public_complaints'] = isset($validated['public_complaints'])
+            ? json_encode($validated['public_complaints'])
+            : json_encode([]);
+
+        $validated['operations_complaints'] = isset($validated['operations_complaints'])
+            ? json_encode($validated['operations_complaints'])
+            : json_encode([]);
+
         $report = LocalReport::create($validated);
 
-        if ($request->wantsJson()) {
-            return response()->json(['message' => 'Local report created', 'data' => $report], 201); // ✅ API response
-        }
-
-        return redirect()->route('technical-local_report')->with('success', 'Local report submitted successfully.');
+        return response()->json(['message' => 'Local report created', 'data' => $report], 201);
     }
 }

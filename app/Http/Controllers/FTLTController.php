@@ -9,18 +9,15 @@ use Illuminate\Support\Facades\Log;
 
 class FTLTController extends Controller
 {
+    // 🌐 Web View
     public function index(Request $request)
     {
-        $query = FTLT::query();
-
-        // 🛡️ If the user is a Technician, limit to only their records
         if (!auth()->check()) {
             return back()->with('error', 'User not authenticated.');
         }
 
-        $validated['staff_id'] = auth()->user()->staff_id; // use the new field
-        $validated['user_id'] = 1; // or any fixed ID for now
-        // ✅ Admins can still use filters
+        $query = FTLT::query();
+
         if (auth()->user()->hasRole('Technical')) {
             $query->where('staff_id', auth()->user()->staff_id);
         }
@@ -31,18 +28,19 @@ class FTLTController extends Controller
 
         if ($request->filled('start_time') && $request->filled('end_time')) {
             $query->whereTime('check_in_time', '>=', $request->start_time)
-                ->whereTime('check_in_time', '<=', $request->end_time);
+                  ->whereTime('check_in_time', '<=', $request->end_time);
         }
 
         $ftlts = $query->orderBy('created_at', 'desc')->paginate(10);
-
         return view('departments.technical.ftlt.index', compact('ftlts'));
     }
-    // For Flutter/mobile
+
+    // 📲 API GET: For Mobile
     public function apiIndex()
     {
-        $ftlts = FTLT::with('user')->latest()->get();
-        return response()->json($ftlts);
+        return response()->json(
+            FTLT::with('user')->latest()->get()
+        );
     }
 
     public function create()
@@ -61,23 +59,15 @@ class FTLTController extends Controller
         ]);
 
         $user = auth()->user();
-
         if (!$user || !$user->staff_id) {
-            dd('Missing staff_id on user');
+            return back()->with('error', 'Missing staff ID');
         }
 
         $validated['staff_id'] = $user->staff_id;
         $validated['user_id'] = $user->id;
         $validated['check_in_time'] = now();
+        $validated['checkin_photo'] = $request->file('checkin_photo')->store('ftlt_photos', 'public');
 
-        // Try uploading the photo
-        if ($request->hasFile('checkin_photo')) {
-            $validated['checkin_photo'] = $request->file('checkin_photo')->store('ftlt_photos', 'public');
-        } else {
-            dd('No photo uploaded');
-        }
-
-        // See what's inside the $validated
         FTLT::create($validated);
         return redirect()->route('ftlt.index')->with('success', 'Check-in successful!');
     }
@@ -103,6 +93,7 @@ class FTLTController extends Controller
         return redirect()->route('ftlt.index')->with('success', 'Check-out completed!');
     }
 
+    // ✅ API POST: Check-In from Flutter
     public function apiCheckIn(Request $request)
     {
         Log::info('📥 Check-In hit', $request->all());
@@ -114,16 +105,17 @@ class FTLTController extends Controller
             'location'      => 'required|string',
             'check_in_time' => 'required|date',
             'checkin_photo' => 'required|image|mimes:jpeg,jpg,png|max:5120',
+            'user_id'       => 'required|numeric',
         ]);
 
-        $validated['user_id'] = 1;
+        $validated['user_id'] = (int) $validated['user_id'];
         $validated['checkin_photo'] = $request->file('checkin_photo')->store('ftlt_photos', 'public');
 
         FTLT::create($validated);
-
         return response()->json(['message' => 'Check-In saved'], 201);
     }
 
+    // ✅ API POST: Check-Out from Flutter
     public function apiCheckOut(Request $request)
     {
         Log::info('📤 Check-Out hit', $request->all());
@@ -146,7 +138,7 @@ class FTLTController extends Controller
         }
 
         $entry->check_out_time = $validated['check_out_time'];
-        $entry->location = $validated['location']; // optional overwrite
+        $entry->location = $validated['location'];
         $entry->checkout_photo = $request->file('checkout_photo')->store('ftlt_photos', 'public');
         $entry->save();
 
@@ -156,7 +148,6 @@ class FTLTController extends Controller
     public function apiUpdate(Request $request, $id)
     {
         $ftlt = FTLT::find($id);
-
         if (!$ftlt) {
             return response()->json(['error' => 'FTLT record not found'], 404);
         }
@@ -183,23 +174,19 @@ class FTLTController extends Controller
 
         return response()->json([
             'message' => 'FTLT record updated successfully',
-            'data' => $ftlt->fresh() // ✅ this reloads from DB
+            'data' => $ftlt->fresh()
         ], 200);
     }
 
     public function apiDelete($id)
     {
         $ftlt = FTLT::find($id);
-
         if (!$ftlt) {
             return response()->json(['error' => 'FTLT record not found'], 404);
         }
 
         $ftlt->delete();
 
-        return response()->json([
-            'message' => 'FTLT record deleted successfully',
-            'id' => $id
-        ], 200);
+        return response()->json(['message' => 'FTLT record deleted', 'id' => $id], 200);
     }
 }

@@ -6,22 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up()
     {
         Schema::create('terminal_parkings', function (Blueprint $table) {
             $table->id();
-            $table->string('number');
-            $table->string('status')->nullable();
-            $table->string('zone_code')->nullable();
-            $table->timestamp('last_communication')->nullable();
-            $table->string('battery_health')->nullable();
-            $table->string('location')->nullable();
+            $table->string('terminal_id'); // FK to terminals
+            $table->string('branch'); // optional, or get from terminals
+            $table->string('status');
+            $table->string('location');
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
             $table->timestamps();
+
+            $table->foreign('terminal_id')->references('id')->on('terminals')->onDelete('cascade');
         });
     }
 

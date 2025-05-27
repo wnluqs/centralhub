@@ -35,7 +35,19 @@ class ComplaintsController extends Controller
 
         // 🔁 If request is from Flutter (expects JSON)
         if ($request->wantsJson()) {
-            return response()->json($complaints);
+            $user = auth()->user();
+
+            // 🛡️ Only show complaints assigned to this technician
+            if ($user->hasRole('Technical')) {
+                $complaints = Complaint::where('assigned_to', $user->id)
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+
+                return response()->json($complaints);
+            }
+
+            // 🧑‍💼 Admins/CC see all
+            return response()->json($query->orderBy('created_at', 'desc')->get());
         }
 
         // Web view rendering
@@ -159,8 +171,8 @@ class ComplaintsController extends Controller
         );
     }
 
-    // Show assign form
-    public function assign($id)
+    // Show attend form
+    public function attend($id)
     {
         $complaint = Complaint::findOrFail($id);
         $technicians = User::role('Technical')->get(); // Spatie role-based
@@ -208,6 +220,11 @@ class ComplaintsController extends Controller
 
     public function markFixed($id)
     {
+        // ✅ Backend role protection
+        if (!auth()->user()->hasRole('Admin') && !auth()->user()->hasRole('ControlCenter')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $complaint = Complaint::findOrFail($id);
         $complaint->fixed_at = now();
         $complaint->status = 'Resolved';
@@ -218,6 +235,11 @@ class ComplaintsController extends Controller
 
     public function unassign($id)
     {
+        // ✅ Backend role protection
+        if (!auth()->user()->hasRole('Admin') && !auth()->user()->hasRole('ControlCenter')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $complaint = Complaint::findOrFail($id);
         $complaint->assigned_to = null;
         $complaint->attended_at = null;
@@ -240,10 +262,32 @@ class ComplaintsController extends Controller
         return redirect()->route('technical-complaints')->with('success', 'Attendance submitted successfully.');
     }
 
-    public function apiIndex()
+    public function apiIndex(Request $request)
     {
-        $complaints = Complaint::latest()->get();
-        return response()->json($complaints);
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $roles = $user->getRoleNames();
+        \Log::info('Authenticated user: ' . $user->name . ' (ID: ' . $user->id . ', Roles: ' . json_encode($roles) . ')');
+
+        if ($roles->contains('Technical')) {
+            $data = Complaint::where('assigned_to', $user->id)
+                ->whereIn('status', ['New', 'In Progress', 'Resolved'])
+                ->latest()
+                ->get();
+
+            return response()->json($data, 200);
+        }
+
+        // 🛠 Ensure this always returns an array
+        $allData = Complaint::whereIn('status', ['New', 'In Progress', 'Resolved'])
+            ->latest()
+            ->get();
+
+        return response()->json($allData->values(), 200); // <-- use ->values() to ensure it's a proper array
     }
 
     public function apiStore(Request $request)
@@ -317,20 +361,75 @@ class ComplaintsController extends Controller
     {
         $complaint = Complaint::findOrFail($id);
 
-        $complaint->remarks = $request->remarks;
-        $complaint->status = 'Resolved';
-        $complaint->fixed_at = now();
+        // Always mark as In Progress if still New
+        if ($complaint->status === 'New') {
+            $complaint->status = 'In Progress';
+            $complaint->attended_at = now();
+        }
 
-        // Handle uploaded photo if available
+        // 👷 Auto-assign to current user if not already assigned
+        if ($complaint->assigned_to === null) {
+            $complaint->assigned_to = auth()->id();
+        }
+
+        $complaint->remarks = $request->remarks;
+        $complaint->status = 'In Progress'; // Force In Progress no matter what
+
+        // ✅ Handle uploaded fix photo (optional)
         if ($request->hasFile('fixed_photo')) {
             $file = $request->file('fixed_photo');
             $filename = time() . '_' . $file->getClientOriginalName();
             $path = $file->storeAs('public/complaint_photos', $filename);
-            $complaint->fixed_photo = $filename; // optional column
+            $complaint->fixed_photo = $filename;
         }
 
         $complaint->save();
 
-        return response()->json(['message' => 'Complaint resolved successfully!', 'data' => $complaint], 200);
+        return response()->json([
+            'message' => 'Complaint marked as attended (In Progress)',
+            'data' => $complaint
+        ], 200);
+    }
+
+    public function myAttendedComplaints(Request $request)
+    {
+        $userId = $request->query('user_id');
+
+        if (!$userId) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User ID required'
+            ], 400);
+        }
+
+        $complaints = Complaint::where('assigned_to', $userId)
+            ->whereIn('status', ['Resolved', 'In Progress'])
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        return response()->json($complaints);
+    }
+
+    // Show assign form
+    public function assignTechnical($id)
+    {
+        $complaint = Complaint::findOrFail($id);
+        $technicians = User::whereHas('roles', fn($q) => $q->where('name', 'Technical'))->get();
+
+        return view('departments.technical.complaint.assign', compact('complaint', 'technicians'));
+    }
+
+    // Handle form submission
+    public function updateAssignTechnical(Request $request, $id)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $complaint = Complaint::findOrFail($id);
+        $complaint->assigned_to = $request->user_id;
+        $complaint->save();
+
+        return redirect()->route('technical-complaints')->with('success', 'Complaint assigned successfully.');
     }
 }

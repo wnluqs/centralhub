@@ -25,6 +25,7 @@ use App\Http\Controllers\BTSController; // Newly added BTS controller
 use App\Http\Controllers\TerminalController; // Newly added Terminal controller
 use App\Http\Controllers\LocationController; // Newly added Location controller 5 May 2025
 use App\Http\Controllers\CallInboundController; // Newly added Call Inbound controller on 5th May 2025 CC
+use App\Http\Controllers\RoadController; // Newly added Road controller on 19th May 2025
 
 // ---------------------------------------------------------------------
 // Models
@@ -213,7 +214,12 @@ Route::prefix('technical')->group(function () {
 
     //Complaint Routes for TECHNICAL
     Route::put('/complaints/{id}/mark-fixed', [ComplaintsController::class, 'markFixed'])->name('complaints.markFixed');
-    Route::get('/complaints/{id}/mark-fixed', [ComplaintsController::class, 'markAsFixed'])->name('complaints.markFixed');
+    // Technician version of attending
+    Route::get('/technical/complaint/{id}/attend', [ComplaintsController::class, 'attend'])->name('technical.complaints.attend');
+    Route::post('/complaint/{id}/attend', [ComplaintsController::class, 'submitAttendance'])->name('technical.complaints.attend.submit');
+    Route::get('/complaint/{id}/assign', [ComplaintsController::class, 'assignTechnical'])->name('technical.complaints.assign');
+    Route::put('/complaint/{id}/assign', [ComplaintsController::class, 'updateAssignTechnical'])->name('technical.complaints.assign.update');
+    Route::get('/complaint/{id}/attend', [ComplaintsController::class, 'attend'])->name('technical.complaints.attend');
 });
 
 // ---------------------------------------------------------------------
@@ -234,8 +240,6 @@ Route::prefix('controlcenter')->middleware(['auth', 'checkRole:Admin|ControlCent
 
     // Complaints
     Route::get('/complaint', [ComplaintsController::class, 'index'])->name('controlcenter-complaints');
-    Route::get('/complaint/{id}/assign', [ComplaintsController::class, 'assign'])->name('complaints.assign');
-    Route::put('/complaint/{id}/assign', [ComplaintsController::class, 'assignUpdate'])->name('complaints.assign.update');
     Route::get('/complaints/{id}/reassign', [ComplaintsController::class, 'reassign'])->name('complaints.reassign');
     Route::post('/complaints/{id}/reassign', [ComplaintsController::class, 'reassignUpdate'])->name('complaints.reassign.update');
     Route::put('/complaints/{id}/unassign', [ComplaintsController::class, 'unassign'])->name('complaints.unassign');
@@ -254,6 +258,8 @@ Route::prefix('controlcenter')->middleware(['auth', 'checkRole:Admin|ControlCent
 Route::get('/technical/terminal-parking', [TerminalParkingController::class, 'index'])->name('technical.terminal_parking');
 Route::get('/technical/terminal-parking/export-csv', [TerminalParkingController::class, 'exportCSV'])->name('technical.terminal_parking.export.csv');
 Route::get('/technical/terminal-parking/export-excel', [TerminalParkingController::class, 'exportExcel'])->name('technical.terminal_parking.export.excel');
+Route::get('/terminal-parking/{id}/edit-location', [TerminalParkingController::class, 'editLocation'])->name('terminal_parking.edit_location');
+Route::post('/terminal-parking/{id}/update-location', [TerminalParkingController::class, 'updateLocation'])->name('terminal_parking.update_location');
 
 Route::resource('report', ReportController::class)->except(['show']);
 
@@ -299,3 +305,6 @@ Route::get('/api/terminals/search', [TerminalController::class, 'search'])->name
 Route::patch('/inspections/{id}/spotcheck', [InspectionsController::class, 'updateSpotcheck'])
     ->middleware('auth', 'checkRole:Admin')
     ->name('inspections.spotcheck');
+
+    // API route for fetching roads by zone
+Route::get('/roads/{zoneId}', [RoadController::class, 'getByZone']);

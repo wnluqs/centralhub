@@ -68,7 +68,8 @@
             <div class="row">
                 <div class="col-md-6 mb-4">
                     <label for="spare_parts" class="form-label" style="font-size: 18px;">Spare Parts</label>
-                    <select name="spare_parts[]" id="spare_parts" class="form-control" multiple="multiple" style="font-size: 18px;">
+                    <select name="spare_parts[]" id="spare_parts" class="form-control" multiple="multiple"
+                        style="font-size: 18px;">
                         @foreach ($spareParts as $part)
                             <option value="{{ $part }}">{{ $part }}</option>
                         @endforeach
@@ -126,14 +127,10 @@
                         <option value="Dirty">Dirty</option>
                     </select>
                 </div>
-                <div class="col-md-6 mb-4">
-                    <label for="technician_name" class="form-label" style="font-size: 18px;">Technician Name</label>
-                    <select name="technician_name" class="form-control" style="font-size: 18px;" required>
-                        <option value="">-- Select Technician --</option>
-                        @foreach ($technicians as $technician)
-                            <option value="{{ $technician }}">{{ $technician }}</option>
-                        @endforeach
-                    </select>
+                <div class="mb-3">
+                    <label class="form-label">Submitted By</label>
+                    <input type="text" name="submitted_by" class="form-control" value="{{ auth()->user()->name }}"
+                        readonly>
                 </div>
             </div>
 
@@ -142,11 +139,13 @@
             <div class="row">
                 <div class="col-md-6 mb-4">
                     <label for="photo_path" class="form-label" style="font-size: 18px;">Upload Photo(s)</label>
-                    <input type="file" name="photo_path[]" multiple class="form-control" accept="image/*" style="font-size: 18px;">
+                    <input type="file" name="photo_path[]" multiple class="form-control" accept="image/*"
+                        style="font-size: 18px;">
                 </div>
                 <div class="col-md-6 mb-4">
                     <label for="video_path" class="form-label" style="font-size: 18px;">Upload Video</label>
-                    <input type="file" name="video_path" class="form-control" accept="video/*" style="font-size: 18px;">
+                    <input type="file" name="video_path" class="form-control" accept="video/*"
+                        style="font-size: 18px;">
                 </div>
                 <div class="col-md-6 mb-4">
                     <label for="keypad_grade" class="form-label" style="font-size: 18px;">Keypad Grade</label>
@@ -167,56 +166,62 @@
 @endsection
 
 @push('scripts')
-<script>
-    $(document).ready(function () {
-        $('#spare_parts').select2({
-            placeholder: "Select Spare Parts",
-            theme: 'bootstrap4',
-            width: '100%'
-        });
+    <script>
+        $(document).ready(function() {
+            $('#spare_parts').select2({
+                placeholder: "Select Spare Parts",
+                theme: 'bootstrap4',
+                width: '100%'
+            });
 
-        $('#terminal_id').select2({
-            placeholder: "-- Select Terminal ID --",
-            theme: 'bootstrap4',
-            width: '100%',
-        });
+            $('#terminal_id').select2({
+                placeholder: "-- Select Terminal ID --",
+                theme: 'bootstrap4',
+                width: '100%',
+            });
 
-        $('#terminal_id').prop('disabled', true);
+            $('#terminal_id').prop('disabled', true);
 
-        $('#branch').change(function () {
-            var selectedBranch = $(this).val();
+            $('#branch').change(function() {
+                var selectedBranch = $(this).val();
 
-            $('#terminal_id').html('<option value="">-- Fetching Terminals... --</option>').prop('disabled', false);
+                $('#terminal_id').html('<option value="">-- Fetching Terminals... --</option>').prop(
+                    'disabled', false);
 
-            if (selectedBranch) {
-                $.ajax({
-                    url: "{{ route('terminals.byBranch') }}",
-                    type: "GET",
-                    data: { branch: selectedBranch },
-                    success: function (response) {
-                        $('#terminal_id').html('<option value="">-- Select Terminal ID --</option>');
+                if (selectedBranch) {
+                    $.ajax({
+                        url: "{{ route('terminals.byBranch') }}",
+                        type: "GET",
+                        data: {
+                            branch: selectedBranch
+                        },
+                        success: function(response) {
+                            $('#terminal_id').html(
+                                '<option value="">-- Select Terminal ID --</option>');
 
-                        if (response.length > 0) {
-                            $.each(response, function (index, terminal) {
-                                $('#terminal_id').append(
-                                    $('<option>', {
-                                        value: terminal.id,
-                                        text: terminal.id
-                                    })
-                                );
-                            });
-                        } else {
-                            $('#terminal_id').html('<option value="">-- No Terminals Found --</option>');
+                            if (response.length > 0) {
+                                $.each(response, function(index, terminal) {
+                                    $('#terminal_id').append(
+                                        $('<option>', {
+                                            value: terminal.id,
+                                            text: terminal.id
+                                        })
+                                    );
+                                });
+                            } else {
+                                $('#terminal_id').html(
+                                    '<option value="">-- No Terminals Found --</option>');
+                            }
+                        },
+                        error: function(xhr) {
+                            console.log(xhr.responseText);
                         }
-                    },
-                    error: function (xhr) {
-                        console.log(xhr.responseText);
-                    }
-                });
-            } else {
-                $('#terminal_id').html('<option value="">-- Select Terminal ID --</option>').prop('disabled', true);
-            }
+                    });
+                } else {
+                    $('#terminal_id').html('<option value="">-- Select Terminal ID --</option>').prop(
+                        'disabled', true);
+                }
+            });
         });
-    });
-</script>
+    </script>
 @endpush

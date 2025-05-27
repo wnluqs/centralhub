@@ -12,12 +12,14 @@ class BTS extends Model
     protected $table = 'bts'; // 👈 important
 
     protected $fillable = [
+        'staff_id',
         'terminal_id',
         'status',
         'location',
         'event_date',
         'event_code_name',
         'comment',
+        'terminal_status',
         'damage_type',
         'action_by',
         'action_status',

@@ -8,7 +8,7 @@
 
     <h3 class="mb-4 text-primary">Attend Complaint for Terminal <strong>{{ $complaint->terminal_id }}</strong></h3>
 
-    <form action="{{ route('complaints.attend.submit', $complaint->id) }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('technical.complaints.attend.submit', $complaint->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
 
         {{-- Terminal Info (Read-only) --}}

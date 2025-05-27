@@ -76,7 +76,8 @@ class ReportExport implements FromCollection, WithHeadings
             DB::raw("'' as event_code_name"),
             'public_complaints as comment',
             DB::raw("'' as parts_request"),
-            DB::raw("'' as terminal_status")
+            DB::raw("'' as terminal_status"),
+            'technician_name'
         )
             ->get()
             ->map(fn($l) => [
@@ -88,6 +89,7 @@ class ReportExport implements FromCollection, WithHeadings
                 'comment'          => $l->comment,
                 'parts_request'    => '',
                 'terminal_status'  => '',
+                'technician_name'  => $l->technician_name,
             ]);
 
         // Merge & sort
@@ -115,6 +117,7 @@ class ReportExport implements FromCollection, WithHeadings
             'Comment',
             'Parts Request',
             'Terminal Status',
+            'Technician Name',
         ];
     }
 }

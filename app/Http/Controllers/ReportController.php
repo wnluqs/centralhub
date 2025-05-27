@@ -21,21 +21,18 @@ class ReportController extends Controller
         $terminal = $request->get('terminal');
         $status   = $request->get('terminal_status');
         $type     = $request->get('type');
+        $type = $type === '' ? null : $type; // normalize for "All Types"
 
-        //
         // 1) BTS Reports
-        //
         $bts = Report::query();
         if ($terminal)  $bts->where('terminal_id', 'like', "%{$terminal}%");
         if ($status)    $bts->where('terminal_status', $status);
         $btsReports = $bts->get()->map(function ($r) {
             $r->type = 'BTS';
             return $r;
-        });
+        })->values(); // ✅ Reset index
 
-        //
         // 2) Complaint Reports
-        //
         $complaints = Complaint::select(
             'id',
             'terminal_id',
@@ -50,41 +47,45 @@ class ReportController extends Controller
             'photos as photo',
             'status as terminal_status'
         )
-
             ->when($terminal, fn($q) => $q->where('terminal_id', 'like', "%{$terminal}%"))
             ->when($status,   fn($q) => $q->where('status', $status))
             ->get()
             ->map(function ($c) {
                 $c->type = 'Complaint';
                 return $c;
-            });
+            })->values(); // ✅ Reset index
 
-        //
-        // 3) Local Reports (“Laporan Setempat”)
-        //    Assuming your LocalReport model has:
-        //      zone, road, public_complaints, operations_complaints,
-        //      photos, videos, technician, date
-        //
+        // 3) Local Reports
         $local = LocalReport::select(
             'id',
-            // if you don’t have a terminal_id field here, just blank it out:
             DB::raw("'' as terminal_id"),
             'zone as location',
-            'created_at as event_date',    // ← use created_at
+            'created_at as event_date',
             DB::raw("'' as event_code_name"),
             'public_complaints as comment',
             DB::raw("'' as parts_request"),
             'photos as photo',
-            DB::raw("'' as terminal_status")
+            DB::raw("'' as terminal_status"),
+            'technician_name', // ✅ added
         )
-            ->when($status, fn($q) => $q->where('date', 'like', "%{$status}%")) // optional date filter?
+            ->when($status, fn($q) => $q->where('date', 'like', "%{$status}%"))
             ->get()
             ->map(function ($lr) {
                 $lr->type = 'Local';
                 return $lr;
-            });
+            })->values(); // ✅ Reset index
 
-        // pick the correct collection
+        \Log::info([
+            'BTS' => $btsReports->count(),
+            'Complaints' => $complaints->count(),
+            'Local' => $local->count(),
+            'Merged_fixed' => collect()
+                ->concat($btsReports)
+                ->concat($complaints)
+                ->concat($local)
+                ->count(),
+        ]);
+        // Pick the correct collection
         if ($type === 'BTS') {
             $reports = $btsReports;
         } elseif ($type === 'Complaint') {
@@ -92,11 +93,13 @@ class ReportController extends Controller
         } elseif ($type === 'Local') {
             $reports = $local;
         } else {
-            $reports = $btsReports
-                ->merge($complaints)
-                ->merge($local)
+            // ✅ Use values() again after merge to clean up indexes
+            $reports = collect()
+                ->concat($btsReports)
+                ->concat($complaints)
+                ->concat($local)
                 ->sortByDesc('event_date')
-                ->values();
+                ->values(); // re-index after sorting
         }
 
         return view('departments.technical.report.index', compact('reports', 'type'));
@@ -215,6 +218,7 @@ class ReportController extends Controller
                 'comment'         => $r->comment,
                 'parts_request'   => '',
                 'terminal_status' => $r->terminal_status,
+                'technician_name' => $r->technician_name,
             ]);
         } elseif ($type === 'Complaint') {
             $items = Complaint::all()->map(fn($c) => [
@@ -237,6 +241,7 @@ class ReportController extends Controller
                 'comment'         => $l->public_complaints,
                 'parts_request'   => '',
                 'terminal_status' => '',
+                'technician_name' => $l->technician_name,
             ]);
         } else {
             // Merge all three if no type filter
@@ -270,6 +275,7 @@ class ReportController extends Controller
                     'comment' => $l->public_complaints,
                     'parts_request' => '',
                     'terminal_status' => '',
+                    'technician_name' => $l->technician_name,
                 ]))
                 ->sortByDesc('event_date');
         }
@@ -279,7 +285,7 @@ class ReportController extends Controller
         $handle   = fopen('php://memory', 'r+');
 
         // Header row
-        fputcsv($handle, ['Type', 'Terminal ID', 'Location', 'Event Date', 'Event Code - Name', 'Comment', 'Parts Request', 'Terminal Status']);
+        fputcsv($handle, ['Type', 'Terminal ID', 'Location', 'Event Date', 'Event Code - Name', 'Comment', 'Parts Request', 'Terminal Status', 'Technician Name']);
 
         foreach ($items as $row) {
             fputcsv($handle, array_values($row));

@@ -6,7 +6,7 @@
     </a>
 
     <div class="container">
-         @if (session('success'))
+        @if (session('success'))
             <div class="alert alert-success">
                 {{ session('success') }}
             </div>
@@ -59,8 +59,8 @@
                         value="{{ request('status') }}">
                 </div>
                 <div class="col-md-3">
-                    <input type="text" name="technician_name" class="form-control" placeholder="Search Technician"
-                        value="{{ request('technician_name') }}">
+                    <input type="text" name="submitted_by" class="form-control" placeholder="Search Submitted By"
+                        value="{{ request('submitted_by') }}">
                 </div>
                 <div class="col-md-3">
                     <input type="date" name="start_date" class="form-control" placeholder="Start Date"
@@ -86,6 +86,9 @@
             class="btn btn-success ml-2">Export CSV</a>
         <a href="{{ route('inspections.export.excel', ['search' => request('search')]) }}"
             class="btn btn-success ml-2">Export Excel</a>
+        <a href="{{ route('technical-inspections') }}" class="btn btn-outline-secondary ml-2">
+            🔄 Reload Table
+        </a>
 
         {{-- Dynamic Alert Always Visible if Filters Applied --}}
         @if (request('start_date') ||
@@ -95,7 +98,7 @@
                 request('road') ||
                 request('branch') ||
                 request('status') ||
-                request('technician_name') ||
+                request('submitted_by') ||
                 request('keypad_grade'))
             <div class="alert alert-info">
                 <strong>Filtered Results:</strong>
@@ -124,8 +127,8 @@
                 @if (request('status'))
                     <br>Status contains: <strong>{{ request('status') }}</strong>
                 @endif
-                @if (request('technician_name'))
-                    <br>Technician Name contains: <strong>{{ request('technician_name') }}</strong>
+                @if (request('submitted_by'))
+                    <br>Submitted By contains: <strong>{{ request('submitted_by') }}</strong>
                 @endif
                 @if (request('keypad_grade'))
                     <br>Keypad Grade contains: <strong>{{ request('keypad_grade') }}</strong>
@@ -138,15 +141,7 @@
         @if ($inspections->isEmpty())
             <p style="color: red;">No inspections found.</p>
         @else
-            <table class="table table-bordered table-striped table-sm text-center align-middle">
-                {{-- Your table headers and foreach --}}
-            </table>
-        @endif
-
-        @if ($inspections->isEmpty())
-            <p style="color: red;">No inspections found.</p>
-        @else
-            <table class="table table-bordered table-striped table-sm text-center align-middle">
+            <table id="inspectionTable" class="table table-bordered table-striped table-sm text-center align-middle">
                 <thead class="thead-dark text-center">
                     <tr>
                         <th>Terminal ID</th>
@@ -155,7 +150,7 @@
                         <th>Branch</th>
                         <th>Spare Parts</th>
                         <th>Status</th>
-                        <th>Technician</th>
+                        <th>Submitted By (User)</th>
                         <th>Created At</th>
                         <th>Keypad Grade</th>
                         @hasanyrole(['Admin', 'TechnicalLead'])
@@ -205,7 +200,7 @@
                                     {{ $inspection->status }}
                                 </span>
                             </td>
-                            <td>{{ $inspection->technician_name }}</td>
+                            <td>{{ $inspection->submitted_by }}</td>
                             <td>{{ $inspection->created_at->format('Y-m-d H:i:s') }}</td>
 
                             {{-- 🛠 Correct order below --}}
@@ -239,3 +234,121 @@
         @endif
     </div>
 @endsection
+@push('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <script>
+        let inspectionTable;
+        let lastKnownInspectionId = {{ $inspections->first()->id ?? 0 }};
+
+        function formatMediaList(media, type = 'image') {
+            if (!Array.isArray(media)) {
+                try {
+                    media = JSON.parse(media || '[]');
+                } catch (_) {
+                    media = [];
+                }
+            }
+            return media.map((item) => {
+                if (type === 'image') {
+                    return `<img src="/storage/${item}" width="60" class="me-1 mb-1">`;
+                }
+                return `<a href="/storage/${item}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-play-circle"></i> View</a>`;
+            }).join('');
+        }
+
+        function fetchLatestInspections() {
+            $.get('{{ route('technical-inspections') }}?json=1', function(data) {
+                const inspections = data.inspections;
+                if (!inspections || !inspections.length) return;
+
+                console.log("Fetched inspection IDs:", inspections.map(i => i.id));
+                console.log("Last known Inspection ID:", lastKnownInspectionId);
+
+                if (inspections[0].id > lastKnownInspectionId) {
+                    lastKnownInspectionId = inspections[0].id;
+                    inspectionTable.clear();
+
+                    inspections.forEach((insp) => {
+                        const rowNode = inspectionTable.row.add([
+                            insp.terminal_id,
+                            insp.zone,
+                            insp.road,
+                            insp.branch ?? '-',
+                            insp.spare_parts ?? '-',
+                            insp.status,
+                            insp.submitted_by ?? '-',
+                            new Date(insp.created_at).toLocaleString(),
+                            insp.keypad_grade ?? '-',
+                            '<em class="text-secondary">Pending</em>',
+                            `<a href="/technical/inspections/${insp.id}" class="btn btn-sm btn-primary">View Details</a>`
+                        ]).node();
+
+                        $(rowNode).addClass('flash-new');
+                    });
+
+                    // 👇 Force re-sorting by created_at (column index 7) descending
+                    inspectionTable.order([7, 'desc']).draw();
+
+                    $('html, body').animate({
+                        scrollTop: 0
+                    }, 'fast');
+                    toastr.success('New inspection received');
+
+                    document.addEventListener('click', () => {
+                        const ding = document.getElementById('ding-sound');
+                        if (ding) ding.play().catch(err => console.warn('Still blocked:', err));
+                    }, {
+                        once: true
+                    });
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            inspectionTable = $('#inspectionTable').DataTable({
+                paging: false, // disable DataTables pagination
+                searching: false, // disable the search box
+                info: false, // remove "Showing 1 to X of Y entries"
+                ordering: true, // keep sorting
+                responsive: true
+            });
+
+            console.log("Auto-refresh started (Inspection)");
+            setInterval(fetchLatestInspections, 5000);
+        });
+    </script>
+@endpush
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    <style>
+        .dataTables_filter input,
+        .dataTables_length select {
+            color: #000;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 4px 8px;
+        }
+
+        .flash-new {
+            animation: flashGreen 4s ease-in-out;
+        }
+
+        @keyframes flashGreen {
+            0% {
+                background-color: #28a745;
+            }
+
+            50% {
+                background-color: #d4edda;
+            }
+
+            100% {
+                background-color: transparent;
+            }
+        }
+    </style>
+@endpush

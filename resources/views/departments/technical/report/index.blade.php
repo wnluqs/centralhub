@@ -31,11 +31,11 @@
             </div>
             <div class="col-md-3">
                 <label for="minDate" class="form-label">Start Date</label>
-                <input type="text" id="minDate" class="form-control" placeholder="dd/mm/yyyy">
+                <input type="text" id="minDate" name="minDate" class="form-control" placeholder="dd/mm/yyyy">
             </div>
             <div class="col-md-3">
                 <label for="maxDate" class="form-label">End Date</label>
-                <input type="text" id="maxDate" class="form-control" placeholder="dd/mm/yyyy">
+                <input type="text" id="maxDate" name="maxDate" class="form-control" placeholder="dd/mm/yyyy">
             </div>
             <div class="col-md-3">
                 <button type="submit" class="btn btn-primary w-100">Filter</button>
@@ -56,6 +56,7 @@
                         <th>Attended At</th>
                         <th>Fixed At</th>
                         <th>Parts Request</th>
+                        <th>Technician</th>
                         <th>Photo</th>
                         <th>Terminal Status</th>
                         @if (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('TechnicalLead'))
@@ -72,16 +73,12 @@
                             <td>{{ \Carbon\Carbon::parse($r->event_date)->format('Y-m-d H:i:s') }}</td>
                             <td>
                                 @php
-                                    try {
-                                        $damages = json_decode($r->types_of_damages, true);
-                                        if (is_array($damages)) {
-                                            echo implode(', ', $damages);
-                                        } elseif (!empty($r->types_of_damages)) {
-                                            echo e($r->types_of_damages);
-                                        } else {
-                                            echo '-';
-                                        }
-                                    } catch (Exception $e) {
+                                    $decoded = json_decode($r->types_of_damages, true);
+                                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                        echo implode(', ', $decoded);
+                                    } elseif (!empty($r->types_of_damages) && is_string($r->types_of_damages)) {
+                                        echo e($r->types_of_damages); // fallback if it’s already just a string
+                                    } else {
                                         echo '-';
                                     }
                                 @endphp
@@ -93,6 +90,9 @@
                             <td>{{ isset($r->fixed_at) ? \Carbon\Carbon::parse($r->fixed_at)->format('Y-m-d H:i:s') : '-' }}
                             </td>
                             <td>{{ $r->parts_request ?? '-' }}</td>
+                            <td>
+                                <span class="badge bg-primary">{{ $r->technician_name ?? '-' }}</span>
+                            </td>
                             <td>
                                 @if (!empty($r->photo))
                                     <a href="{{ asset('storage/' . $r->photo) }}" target="_blank"
@@ -108,15 +108,10 @@
                             </td>
                             @if (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('TechnicalLead'))
                                 <td>
+                                    {{-- Optional: Add actions for BTS only, or just display "-" --}}
                                     @if ($r->type === 'BTS')
-                                        <a href="{{ route('summary.edit', $r->id) }}"
-                                            class="btn btn-sm btn-warning">Edit</a>
-                                        <form method="POST" action="{{ route('summary.destroy', $r->id) }}"
-                                            style="display:inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                        </form>
+                                        {{-- Example: <a href="{{ route('bts.attend', $r->id) }}" class="btn btn-sm btn-warning">Attend</a> --}}
+                                        <span class="badge bg-warning">BTS</span>
                                     @else
                                         -
                                     @endif
@@ -125,7 +120,6 @@
                         </tr>
                     @endforeach
                 </tbody>
-
             </table>
         </div>
     </div>

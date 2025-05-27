@@ -23,6 +23,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('assigned_to')->nullable(); // linked to user table
             $table->timestamp('attended_at')->nullable();
             $table->timestamp('fixed_at')->nullable();
+            $table->string('fixed_photo')->nullable(); // for the photo of the fixed terminal
             $table->text('fix_comment')->nullable();
             $table->enum('terminal_status', ['Okay', 'Off'])->nullable();
             $table->boolean('verified')->default(false);

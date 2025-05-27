@@ -1,6 +1,7 @@
 <table id="{{ $tableId }}" class="table table-bordered table-striped table-sm text-center align-middle">
     <thead class="thead-dark">
         <tr>
+            <th>Staff ID</th>
             <th>Terminal ID</th>
             <th>Status</th>
             <th>Location</th>
@@ -16,7 +17,14 @@
     </thead>
     <tbody>
         @foreach ($data as $item)
-            <tr>
+            <tr class="{{ session('highlight_id') == $item->id ? 'newly-added' : '' }}">
+                <td>
+                    @if (empty($item->staff_id) || $item->staff_id === 'UNKNOWN')
+                        <span class="badge bg-secondary">Unassigned</span>
+                    @else
+                        <span class="badge bg-info text-dark">{{ $item->staff_id }}</span>
+                    @endif
+                </td>
                 <td>{{ $item->terminal_id }}</td>
                 <td>
                     @php

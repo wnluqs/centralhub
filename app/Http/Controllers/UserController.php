@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Auth; // Make sure this is at the top if not already 20th may 2025
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -132,5 +133,18 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User deleted successfully!');
+    }
+
+    public function me(Request $request)
+    {
+        $user = Auth::user();
+
+        return response()->json([
+            'name' => $user->name,
+            'email' => $user->email,
+            'staff_id' => $user->staff_id,
+            'branch' => $user->branch,
+            'roles' => $user->getRoleNames(), // Only if using Spatie
+        ]);
     }
 }

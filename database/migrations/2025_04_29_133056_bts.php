@@ -12,6 +12,7 @@ return new class extends Migration
 
         Schema::create('bts', function (Blueprint $table) {
             $table->id();
+            $table->string('staff_id')->nullable(); // assuming 'T001', etc.
             $table->string('terminal_id');
             $table->string('status'); // Warning, Error
             $table->string('location');

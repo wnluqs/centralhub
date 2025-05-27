@@ -8,6 +8,8 @@ use App\Http\Controllers\FTLTController;
 use App\Http\Controllers\BTSController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TerminalController;
+use App\Http\Controllers\UserController; // Import the UserController fro 20th may 2025
+use App\Http\Controllers\RoadController; //improt as of 21st may 2025
 
 Route::post('/login', [LoginController::class, 'login']);  // Correct for API
 Route::get('/test-api', function () {
@@ -21,12 +23,15 @@ Route::put('/inspections/{id}', [InspectionsController::class, 'apiUpdate']);
 Route::delete('/inspections/{id}', [InspectionsController::class, 'apiDelete']);
 
 //Complaints
-Route::get('/complaints', [ComplaintsController::class, 'apiIndex']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/complaints', [ComplaintsController::class, 'apiIndex']);
+});
 Route::post('/complaints', [ComplaintsController::class, 'apiStore']);
 Route::put('/complaints/{id}', [ComplaintsController::class, 'apiUpdate']);
 Route::delete('/complaints/{id}', [ComplaintsController::class, 'apiDelete']);
 // New route to handle resolving a complaint from mobile
 Route::post('/complaints/{id}/resolve', [ComplaintsController::class, 'apiResolve']);
+Route::get('/my-attended-complaints', [ComplaintsController::class, 'myAttendedComplaints']);
 
 //Local Report
 Route::get('/local_report', [LocalReportController::class, 'apiIndex']);
@@ -44,9 +49,15 @@ Route::delete('/ftlt/{id}', [FTLTController::class, 'apiDelete']);
 
 // BTS
 Route::get('/bts', [BTSController::class, 'apiIndex']);
-Route::post('/bts', [BTSController::class, 'apiStore']);
-Route::put('/bts/{id}', [BTSController::class, 'apiUpdate']);
+Route::post('/bts/{id}', [BTSController::class, 'apiUpdate']); // ✅ Laravel accepts via _method=PUT
 Route::delete('/bts/{id}', [BTSController::class, 'apiDelete']);
+Route::put('/bts/{id}', [BTSController::class, 'apiUpdate']);
 
 //Terminal id
 Route::get('/search-terminal', [TerminalController::class, 'search']);
+
+//User Id for Mobile Login Profile
+Route::middleware('auth:sanctum')->get('/me', [UserController::class, 'me']);
+
+//Fetch Roads by Zone
+Route::get('/roads/{zone}', [RoadController::class, 'getByZone']);

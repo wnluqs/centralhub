@@ -1,116 +1,172 @@
 @extends('layouts.app')
 
 @section('content')
+    <div class="container">
+        <a href="{{ route('departments.technical') }}" class="btn btn-secondary mb-3">
+            ← Back to Technical Dashboard
+        </a>
 
-<div class="container">
-    <a href="{{ route('departments.technical') }}" class="btn btn-secondary mb-3">
-        ← Back to Technical Dashboard
-    </a>
+        <h2>Terminal Parking System</h2>
+        <p>View the current status and locations of all terminal boxes in the parking system.</p>
 
-    <h2>Terminal Parking System</h2>
-    <p>Here you can view all the terminals in the parking system. This is to provided the current status of the Terminal
-        Boxes </p>
+        <!-- Filter Form -->
+        <form action="{{ route('technical.terminal_parking') }}" method="GET" class="mb-3">
 
-    <form action="{{ route('technical.terminal_parking') }}" method="GET" class="mb-3">
-        <div class="row g-2 align-items-center">
-            <!-- Terminal Number Input -->
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Terminal Number</label>
-                <input type="text" name="terminal_number" class="form-control" placeholder="e.g., TN-01"
-                    value="{{ request('terminal_number') }}">
+            <!-- Export Buttons -->
+            <div class="row mt-3">
+                <div class="col-md-12 text-end">
+                    <a href="{{ route('technical.terminal_parking.export.csv', request()->only('search', 'terminal_number', 'location', 'zone_code')) }}"
+                        class="btn btn-success me-2">Export CSV</a>
+                    <a href="{{ route('technical.terminal_parking.export.excel', request()->only('search', 'terminal_number', 'location', 'zone_code')) }}"
+                        class="btn btn-primary">Export Excel</a>
+                </div>
             </div>
+        </form>
 
-            <!-- Location Input -->
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Location</label>
-                <input type="text" name="location" class="form-control" placeholder="e.g., Bukit Bintang Parking"
-                    value="{{ request('location') }}">
-            </div>
+        <!-- Data Table -->
+        <table id="terminalTable" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Terminal Number</th>
+                    <th>Branch</th>
+                    <th>Status</th>
+                    <th>Location</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($terminals as $terminal)
+                    <tr>
+                        <td>{{ $terminal->terminal?->id ?? 'N/A' }}</td>
+                        <td>{{ $terminal->branch ?? '-' }}</td>
+                        <td>{{ $terminal->status ?? '-' }}</td>
+                        <td>{{ $terminal->location ?? 'No Location' }}</td>
+                        <td>{{ $terminal->latitude ?? '0.0000000' }}</td>
+                        <td>{{ $terminal->longitude ?? '0.0000000' }}</td>
+                        <td>
+                            <a href="{{ route('terminal_parking.edit_location', $terminal->id) }}"
+                                class="btn btn-sm btn-warning">
+                                Edit Location
+                            </a>
+                        </td>
+                    </tr>
+                @endforeach
+                <!-- Temporary test row -->
+                <tr>
+                    <td>TEST001</td>
+                    <td>HQ</td>
+                    <td>Active</td>
+                    <td>Kuala Lumpur</td>
+                    <td>3.1390</td>
+                    <td>101.6869</td>
+                    <td><button class="btn btn-sm btn-secondary" disabled>Edit</button></td>
+                </tr>
+                <tr>
+                    <td>TEST002</td>
+                    <td>HQ</td>
+                    <td>Inactive</td>
+                    <td>Kuala Lumpur</td>
+                    <td>3.2320</td>
+                    <td>101.7000</td>
+                    <td><button class="btn btn-sm btn-secondary" disabled>Edit</button></td>
+                </tr>
+            </tbody>
+        </table>
 
-            <!-- Zone Code Input -->
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Zone Code</label>
-                <input type="text" name="zone_code" class="form-control" placeholder="e.g., UP-0001"
-                    value="{{ request('zone_code') }}">
-            </div>
+        <!-- Google Map -->
+        <div id="map" style="height: 400px;"></div>
+    </div>
+@endsection
 
-            <!-- Filter Button -->
-            <div class="col-md-3 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary w-100">Filter</button>
-            </div>
-        </div>
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css">
+@endpush
 
-        <div class="row mt-3">
-            <div class="col-md-12 text-end">
-                <a href="{{ route('technical.terminal_parking.export.csv', request()->only('search', 'terminal_number', 'location', 'zone_code')) }}"
-                    class="btn btn-success me-2">Export CSV</a>
-                <a href="{{ route('technical.terminal_parking.export.excel', request()->only('search', 'terminal_number', 'location', 'zone_code')) }}"
-                    class="btn btn-primary">Export Excel</a>
-            </div>
-        </div>
-    </form>
+@push('scripts')
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAHrTNapLSbPaD2ViANNf_ptGGvVxVf6Rs&callback=initMap"></script>
 
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Terminal Number</th>
-                <th>Status</th>
-                <th>Zone Code</th>
-                <th>Last Communication</th>
-                <th>Battery Health</th>
-                <th>Location</th>
-                <th>Latitude</th>
-                <th>Longitude</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($terminals as $terminal)
-            <tr>
-                <td>{{ $terminal->number }}</td>
-                <td>{{ $terminal->status }}</td>
-                <td>{{ $terminal->zone_code }}</td>
-                <td>{{ $terminal->last_communication }}</td>
-                <td class="
-                    @if($terminal->battery_health == 'Full')
-                        battery-full
-                    @elseif($terminal->battery_health == 'Half')
-                        battery-half
-                    @elseif($terminal->battery_health == 'Depleted')
-                        battery-depleted
-                    @endif
-                ">
-                    {{ $terminal->battery_health }}
-                </td>
-                <td>{{ $terminal->location }}</td>
-                <td>{{ $terminal->latitude }}</td>
-                <td>{{ $terminal->longitude }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-    <div id="map" style="height: 400px;"></div>
-</div>
-
-<script>
-    function initMap() {
-        var map = new google.maps.Map(document.getElementById('map'), {
-            zoom: 10,
-            center: { lat: 3.1390, lng: 101.6869 }
-        });
-
-        var terminals = @json($terminals);
-
-        terminals.forEach(function(terminal) {
-            new google.maps.Marker({
-                position: { lat: parseFloat(terminal.latitude), lng: parseFloat(terminal.longitude) },
-                map: map,
-                title: terminal.terminal_number
+    <script>
+        $(document).ready(function() {
+            $('#terminalTable').DataTable({
+                responsive: true,
+                order: [
+                    [0, 'asc']
+                ]
             });
         });
-    }
-</script>
-<script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAHrTNapLSbPaD2ViANNf_ptGGvVxVf6Rs&callback=initMap">
-</script>
-@endsection
+
+        function initMap() {
+            const map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 8,
+                center: {
+                    lat: 3.1390,
+                    lng: 101.6869
+                }
+            });
+
+            const terminals = @json($terminals);
+
+            // Inject test markers
+            terminals.push({
+                terminal: {
+                    id: 'TEST001'
+                },
+                latitude: '3.1390',
+                longitude: '101.6869',
+                location: 'Kuala Lumpur',
+                status: 'Active',
+                branch: 'HQ'
+            }, {
+                terminal: {
+                    id: 'TEST002'
+                },
+                latitude: '3.232',
+                longitude: '101.7000',
+                location: 'Kuala Lumpur',
+                status: 'Inactive',
+                branch: 'HQ'
+            });
+
+            const infoWindow = new google.maps.InfoWindow();
+            const bounds = new google.maps.LatLngBounds();
+
+            terminals.forEach(t => {
+                const lat = parseFloat(t.latitude);
+                const lng = parseFloat(t.longitude);
+
+                if (lat !== 0 && lng !== 0) {
+                    const marker = new google.maps.Marker({
+                        position: {
+                            lat,
+                            lng
+                        },
+                        map: map,
+                        title: t.terminal?.id ?? 'Unknown'
+                    });
+
+                    bounds.extend(marker.getPosition());
+
+                    marker.addListener('click', () => {
+                        infoWindow.setContent(`
+                    <div style="font-size:14px;">
+                        <strong>${t.terminal?.id ?? 'N/A'}</strong><br>
+                        <b>Branch:</b> ${t.branch ?? 'N/A'}<br>
+                        <b>Status:</b> ${t.status ?? 'Unknown'}
+                    </div>
+                `);
+                        infoWindow.open(map, marker);
+                    });
+                }
+            });
+
+            // Fit map to markers
+            map.fitBounds(bounds);
+        }
+    </script>
+@endpush

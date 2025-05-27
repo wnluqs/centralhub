@@ -23,7 +23,7 @@ class Inspection extends Model
         'sticker',
         'solar',
         'environment',
-        'technician_name',
+        'submitted_by', // ← replaced with technician_name
         'branch'
     ];
 
@@ -34,5 +34,10 @@ class Inspection extends Model
     public function terminal()
     {
         return $this->belongsTo(Terminal::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

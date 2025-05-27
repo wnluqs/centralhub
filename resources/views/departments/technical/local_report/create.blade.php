@@ -76,6 +76,14 @@
                                 <option value="RORO Bin">RORO Bin</option>
                                 <option value="Crane">Crane</option>
                                 <option value="Trash Can">Trash Can</option>
+                                <option value="Peraih/Peniaga Pasar">Peraih/Peniaga Pasar</option>
+                                <option value="Kontraktor Binaan">Kontraktor Binaan</option>
+                                <option value="Kanopi Sewaan">Kanopi Sewaan</option>
+                                <option value="Pembuangan/Pengumpulan Sampah">Pembuangan/Pengumpulan Sampah</option>
+                                <option value="Wujudnya Ramp Laluan Masuk ke Premis Oleh Pekedai">Wujudnya Ramp Laluan Masuk
+                                    ke Premis Oleh Pekedai</option>
+                                <option value="Car Wash">Car Wash</option>
+                                <option value="Kereta Usang/Tersadai">Kereta Usang/Tersadai</option>
                             </select>
                             <input type="number" name="public_complaints[Halangan Dalam Petak][value]" class="form-control"
                                 placeholder="Nilai (0–100)" min="0" max="100">
@@ -190,23 +198,41 @@
                 </div>
             </div>
 
-            {{-- Media Upload --}}
+            {{-- Media Upload + Location --}}
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="photos" class="form-label">Muat Naik Foto</label>
                     <input type="file" name="photos[]" multiple class="form-control" accept="image/*">
+
+                    {{-- Landmark --}}
+                    <label for="landmark" class="form-label mt-3">Landmark</label>
+                    <input type="text" name="landmark" id="landmark" class="form-control"
+                        placeholder="Contoh: Landmark berhampiran...">
                 </div>
+
                 <div class="col-md-6">
                     <label for="videos" class="form-label">Muat Naik Video</label>
                     <input type="file" name="videos[]" multiple class="form-control" accept="video/*">
+
+                    {{-- Latitude --}}
+                    <label for="latitude" class="form-label mt-3">Latitude</label>
+                    <input type="text" name="latitude" id="latitude" class="form-control"
+                        placeholder="Contoh: 3.123456">
+
+                    {{-- Longitude --}}
+                    <label for="longitude" class="form-label mt-3">Longitude</label>
+                    <input type="text" name="longitude" id="longitude" class="form-control"
+                        placeholder="Contoh: 101.654321">
                 </div>
             </div>
 
-            {{-- Technician --}}
-            <div class="form-group mb-4">
-                <label for="technician_name" class="form-label">Nama Juruteknik</label>
-                <input type="text" name="technician_name" class="form-control" value="{{ Auth::user()->name }}"
-                    readonly>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    {{-- Nama Juruteknik --}}
+                    <label for="technician_name" class="form-label">Nama Juruteknik</label>
+                    <input type="text" name="technician_name" class="form-control" value="{{ Auth::user()->name }}"
+                        readonly>
+                </div>
             </div>
 
             <button type="submit" class="btn btn-success w-100">Hantar Laporan Setempat</button>
@@ -249,9 +275,7 @@
     <script>
         $(document).ready(function() {
             // Disable dropdowns initially
-            $('#zone').prop('disabled', true).select2({
-                placeholder: '-- Pilih Zon --'
-            });
+            $('#zone').prop('disabled', true);
             $('#road').prop('disabled', true);
 
             // When Branch changes
@@ -267,7 +291,7 @@
                         if (zones.length > 0) {
                             $('#zone').prop('disabled', false);
                             zones.forEach(function(z) {
-                                $('#zone').append('<option value="' + z.name + '">' + z.name + '</option>');
+                                $('#zone').append('<option value="' + z.id + '">' + z.name + '</option>');
                             });
                         } else {
                             $('#zone').append('<option value="">Tiada Zon Ditemui</option>');
@@ -289,8 +313,8 @@
                         if (roads.length > 0) {
                             $('#road').prop('disabled', false);
                             roads.forEach(function(r) {
-                                $('#road').append('<option value="' + r.name + '">' + r
-                                    .name + '</option>');
+                                $('#road').append('<option value="' + r + '">' + r +
+                                    '</option>');
                             });
                         } else {
                             $('#road').append('<option value="">Tiada Jalan Ditemui</option>');
@@ -301,5 +325,19 @@
                 }
             });
         });
+    </script>
+    <script>
+        window.onload = function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    document.getElementById('latitude').value = position.coords.latitude.toFixed(6);
+                    document.getElementById('longitude').value = position.coords.longitude.toFixed(6);
+                }, function(error) {
+                    console.warn("Geolocation not allowed or failed: ", error.message);
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        };
     </script>
 @endpush

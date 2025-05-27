@@ -30,7 +30,7 @@ return new class extends Migration {
             $table->enum('spare_grade', ['A', 'B', 'C'])->nullable();
 
             // Technician Name
-            $table->string('technician_name')->nullable();
+            $table->string('submitted_by')->nullable();
 
             // NEW: Optional branch assignment if needed per inspection (redundant if fetched from user)
             $table->string('branch')->nullable();

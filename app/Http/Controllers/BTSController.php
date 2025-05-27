@@ -7,14 +7,28 @@ use App\Models\BTS;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Terminal;
 use App\Models\Report;
+use Illuminate\Support\Facades\Log;
 
 class BTSController extends Controller
 {
     // Show BTS List
     public function index()
     {
-        $available = BTS::where('action_status', 'New')->latest()->get();
-        $inProgress = BTS::where('action_status', 'In Progress')->latest()->get();
+        $user = auth()->user();
+
+        if ($user->hasRole('Technical')) {
+            $available = BTS::whereNull('staff_id') // 👈 Show all unassigned jobs
+                ->where('action_status', 'New')
+                ->latest()->get();
+
+            $inProgress = BTS::where('staff_id', $user->staff_id) // 👈 Only their own in progress jobs
+                ->where('action_status', 'In Progress')
+                ->latest()->get();
+        } else {
+            // Admin/ControlCenter sees all
+            $available = BTS::where('action_status', 'New')->latest()->get();
+            $inProgress = BTS::where('action_status', 'In Progress')->latest()->get();
+        }
 
         return view('departments.technical.bts.index', compact('available', 'inProgress'));
     }
@@ -40,11 +54,14 @@ class BTSController extends Controller
         $validated['action_status'] = 'New'; // Always default when created
         $validated['action_by'] = null;       // No technician yet
         $validated['terminal_status'] = 'Okay'; // <-- Default it here to avoid NULL
+        $validated['staff_id'] = null; // <- New BTS alert: No staff yet
 
-
-        BTS::create($validated);
-
-        return redirect()->route('bts.index')->with('success', 'BTS alert submitted successfully!');
+        $bts = BTS::create($validated);
+        //UPDATED FOR THE CSS STYLE FOR USER EXPERIENCE AND MAKE IT LIGHT UP
+        return redirect()->route('bts.index')->with([
+            'success' => 'BTS alert submitted successfully!',
+            'highlight_id' => $bts->id,
+        ]);
     }
 
     // Show Attend Form
@@ -71,8 +88,10 @@ class BTSController extends Controller
             $validated['photo'] = $path;
         }
 
+        $validated['staff_id'] = Auth::user()->staff_id;
         $validated['action_status'] = 'In Progress';
         $validated['action_by'] = Auth::id();
+        $validated['staff_id'] = auth()->user()->staff_id ?? 'UNKNOWN';
 
         $bts->update($validated);
 
@@ -87,7 +106,10 @@ class BTSController extends Controller
             'terminal_status' => $validated['terminal_status'],
         ]);
 
-        return redirect()->route('bts.index')->with('success', 'BTS alert attended successfully!');
+        return redirect()->route('bts.index')->with([
+            'success' => 'BTS has been Attend successfully!',
+            'highlight_id' => $bts->id,
+        ]);
     }
 
     public function searchTerminals(Request $request)
@@ -111,7 +133,7 @@ class BTSController extends Controller
         return redirect()->route('bts.index')->with('success', 'BTS attendance has been verified.');
     }
 
-// Show BTS Details from Control Center
+    // Show BTS Details from Control Center
     public function controlCenterView()
     {
         $available = BTS::where('action_status', 'New')->latest()->get();
@@ -150,6 +172,7 @@ class BTSController extends Controller
         $validated['action_status'] = 'New';
         $validated['action_by'] = null;
         $validated['terminal_status'] = 'Okay';
+        $validated['staff_id'] = auth()->user()->staff_id ?? null;
 
         $bts = BTS::create($validated);
 
@@ -166,6 +189,12 @@ class BTSController extends Controller
             return response()->json(['error' => 'BTS record not found'], 404);
         }
 
+        \Log::info('📥 Incoming BTS Update Request', $request->all());
+
+        // Step 1: Extract staff_id BEFORE validation
+        $incomingStaffId = $request->input('staff_id', 'UNKNOWN');
+
+        // Step 2: Validate other fields
         $validated = $request->validate([
             'comment'         => 'nullable|string',
             'parts_request'   => 'nullable|string',
@@ -176,15 +205,24 @@ class BTSController extends Controller
             'location'        => 'nullable|string',
             'event_date'      => 'nullable|date',
             'event_code_name' => 'nullable|string',
-            'comment'         => 'nullable|string',
+            // DO NOT validate staff_id here — keep it separate
         ]);
 
         if ($request->hasFile('photo')) {
             $validated['photo'] = $request->file('photo')->store('bts_photos', 'public');
         }
 
+        // Step 3: Reassign staff_id manually
         $validated['action_status'] = 'In Progress';
         $validated['action_by'] = auth()->id() ?? 1;
+
+        $incomingStaffId = $request->request->get('staff_id') ?? $request->all()['staff_id'] ?? 'UNKNOWN';
+        \Log::info('📦 Final staff_id:', ['staff_id' => $incomingStaffId]);
+        \Log::info('📋 All form keys:', array_keys($request->all()));
+
+        $validated['staff_id'] = is_string($incomingStaffId) && strlen($incomingStaffId) > 0
+            ? $incomingStaffId
+            : 'UNKNOWN';
 
         $bts->update($validated);
 

@@ -15,6 +15,9 @@ class LocalReport extends Model
         'operations_complaints',
         'operations_others',
         'technician_name',
+        'landmark',
+        'latitude',
+        'longitude',
         'photos',
         'videos',
     ];
@@ -25,4 +28,5 @@ class LocalReport extends Model
         'photos' => 'array',
         'videos' => 'array',
     ];
+
 }

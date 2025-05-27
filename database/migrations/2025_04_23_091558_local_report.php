@@ -18,6 +18,9 @@ return new class extends Migration
             $table->json('operations_complaints')->nullable();
             $table->text('operations_others')->nullable();
             $table->string('technician_name');
+            $table->string('landmark')->nullable();
+            $table->decimal('latitude', 10, 7)->nullable();
+            $table->decimal('longitude', 10, 7)->nullable();
             $table->json('photos')->nullable();
             $table->json('videos')->nullable();
             $table->timestamp('created_at')->nullable();      // added created_at column

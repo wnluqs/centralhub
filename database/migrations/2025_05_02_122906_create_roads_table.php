@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('roads', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('zone_name')->nullable();
+            $table->string('zone_id')->nullable();
             $table->timestamps();
         });
     }

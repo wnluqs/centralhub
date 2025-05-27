@@ -34,8 +34,8 @@
                 <td>{{ $inspection->status }}</td>
             </tr>
             <tr>
-                <th>Technician</th>
-                <td>{{ $inspection->technician_name }}</td>
+                <th>Submitted_By</th>
+                <td>{{ $inspection->submitted_by }}</td>
             </tr>
             <tr>
                 <th>Screen Condition</th>

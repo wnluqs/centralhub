@@ -11,8 +11,7 @@ use Carbon\Carbon;
 
 class InspectionsController extends Controller
 {
-    // Updated index method to include filtering based on a "search" parameter.
-    public function index(Request $request)
+    public function index(Request $request) //updated on 26st May 2025 to add the auto-refresh
     {
         $query = Inspection::query();
 
@@ -31,27 +30,46 @@ class InspectionsController extends Controller
         if ($request->filled('status')) {
             $query->where('status', 'LIKE', "%{$request->status}%");
         }
-        if ($request->filled('technician_name')) {
-            $query->where('technician_name', 'LIKE', "%{$request->technician_name}%");
+        if ($request->filled('submitted_by')) {
+            $query->where('submitted_by', 'LIKE', "%{$request->submitted_by}%");
         }
-        // Then in your filtering
         if ($request->filled('start_date') && $request->filled('end_date')) {
-            $start = Carbon::parse($request->start_date)->startOfDay(); // 00:00:00
-            $end = Carbon::parse($request->end_date)->endOfDay();       // 23:59:59
-
+            $start = Carbon::parse($request->start_date)->startOfDay();
+            $end = Carbon::parse($request->end_date)->endOfDay();
             $query->whereBetween('created_at', [$start, $end]);
         }
         if ($request->filled('keypad_grade')) {
             $query->where('keypad_grade', 'LIKE', "%{$request->keypad_grade}%");
         }
 
-        // Sorting
         $sortField = $request->input('sort_field', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
-        $query->orderBy($sortField, $sortOrder);
+        $query->orderBy($sortField, $sortOrder); // used only once
 
-        $inspections = $query->paginate(10); // 10 records per page
+        if ($request->has('json')) {
+            return response()->json([
+                'inspections' => $query
+                    ->take(10)
+                    ->get()
+                    ->map(function ($i) {
+                        return [
+                            'id' => $i->id,
+                            'terminal_id' => $i->terminal_id,
+                            'zone' => $i->zone,
+                            'road' => $i->road,
+                            'branch' => $i->branch,
+                            'spare_parts' => $i->spare_parts,
+                            'status' => $i->status,
+                            'submitted_by' => $i->submitted_by,
+                            'created_at' => $i->created_at,
+                            'keypad_grade' => $i->keypad_grade,
+                            'spotcheck_verified_by' => $i->spotcheck_verified_by
+                        ];
+                    })
+            ]);
+        }
 
+        $inspections = $query->orderBy('created_at', 'desc')->paginate(10);
         return view('departments.technical.inspection.index', compact('inspections'));
     }
 
@@ -96,7 +114,7 @@ class InspectionsController extends Controller
             'sticker' => 'nullable|string',
             'solar' => 'nullable|string',
             'environment' => 'nullable|string',
-            'technician_name' => 'required|string',
+            'submitted_by' => 'required|string',
             'photo_path.*' => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
             'video_path'      => 'nullable|file|mimes:mp4,mov,avi|max:20480',
             'keypad_grade'     => 'nullable|in:A,B,C',
@@ -145,7 +163,7 @@ class InspectionsController extends Controller
             'spare_parts.*'   => 'string',
             'status'          => 'required|in:Complete,Failed,Almost',
             'branch'          => 'required|string|in:Kuantan,Machang,Kuala Terengganu',
-            'technician_name' => 'required|string',
+            'submitted_by' => 'required|string',
             'photo_path'      => 'nullable|file|mimes:jpeg,png,jpg,heic,heif|max:20480',
             'video_path'      => 'nullable|file|mimes:mp4,mov,avi|max:20480',
             'spare_grade'     => 'nullable|in:A,B,C',
@@ -197,11 +215,7 @@ class InspectionsController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Return a JSON response instead of a Blade view:
-        return response()->json([
-            'status' => 'success',
-            'data' => $inspections
-        ]);
+        return response()->json($inspections); // ✅ Only return array directly updated on 21st May 2025
     }
 
     public function show($id)
@@ -242,7 +256,7 @@ class InspectionsController extends Controller
             'sticker' => 'nullable|string',
             'solar' => 'nullable|string',
             'environment' => 'nullable|string',
-            'technician_name' => 'required|string',
+            'submitted_by' => 'required|string',
             'photo_path.*' => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
             'video_path' => 'nullable|file|mimes:mp4,mov,avi|max:20480',
             'keypad_grade' => 'nullable|in:A,B,C',
@@ -286,7 +300,7 @@ class InspectionsController extends Controller
             'sticker' => 'nullable|string',
             'solar' => 'nullable|string',
             'environment' => 'nullable|string',
-            'technician_name' => 'sometimes|string',
+            'submitted_by' => 'sometimes|string',
             'photo_path.*' => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
             'video_path' => 'nullable|file|mimes:mp4,mov,avi|max:20480',
             'keypad_grade' => 'nullable|in:A,B,C',

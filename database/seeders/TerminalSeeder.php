@@ -33,8 +33,8 @@ class TerminalSeeder extends Seeder
             ];
         }
 
-        // MACHANG: M01A01 - M01A47
-        for ($j = 1; $j <= 47; $j++) {
+        // MACHANG: M01A01 - M01A49
+        for ($j = 1; $j <= 49; $j++) {
             $terminals[] = [
                 'id' => sprintf('M01A%02d', $j),
                 'branch' => 'Machang',
@@ -48,6 +48,7 @@ class TerminalSeeder extends Seeder
             ['prefix' => 'N01A', 'count' => 37],
             ['prefix' => 'P01A', 'count' => 34],
             ['prefix' => 'T01A', 'count' => 88],
+            ['prefix' => 'STR', 'count' => 177],
         ];
 
         foreach ($ktPrefixes as $set) {

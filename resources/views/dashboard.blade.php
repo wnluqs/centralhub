@@ -62,7 +62,7 @@
 
                         $today = Carbon::now()->toDateString();
                         $user = Auth::user();
-                        $hasInspectionToday = Inspection::where('technician_name', $user->name)
+                        $hasInspectionToday = Inspection::where('submitted_by', $user->name)
                                                         ->whereDate('created_at', $today)
                                                         ->exists();
                         $assignedComplaints = Complaint::where('assigned_to', $user->id)

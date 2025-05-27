@@ -38,16 +38,45 @@
 @endsection
 
 @push('scripts')
+    <style>
+        .newly-added {
+            animation: flashHighlight 2.5s ease-in-out;
+            box-shadow: 0 0 10px 2px #00c851;
+        }
+
+        @keyframes flashHighlight {
+            0% {
+                background-color: #c8f7c5;
+            }
+
+            50% {
+                background-color: #88f088;
+            }
+
+            100% {
+                background-color: transparent;
+            }
+        }
+    </style>
     <!-- DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css">
     <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+    <script src="https://cdn.datatables.net/plug-ins/1.13.5/sorting/datetime-moment.js"></script>
 
     <script>
         $(document).ready(function() {
+            // ✅ Register Moment.js for both tables
+            $.fn.dataTable.moment('DD/MM/YYYY HH:mm'); // Use correct format!
+
+            // ✅ Available Jobs Table (Event Date = index 3)
             $('#availableJobs').DataTable({
                 "paging": true,
                 "searching": true,
                 "ordering": true,
+                "order": [
+                    [3, 'desc']
+                ],
                 "info": true,
                 "responsive": true,
                 "autoWidth": false,
@@ -61,10 +90,14 @@
                 }
             });
 
+            // ✅ In Progress Table (Created At = index 7)
             $('#inProgressJobs').DataTable({
                 "paging": true,
                 "searching": true,
                 "ordering": true,
+                "order": [
+                    [7, 'desc']
+                ],
                 "info": true,
                 "responsive": true,
                 "autoWidth": false,
@@ -78,6 +111,11 @@
                 }
             });
         });
+
+        setTimeout(() => {
+            document.querySelectorAll('.newly-added').forEach(el => {
+                el.classList.remove('newly-added');
+            });
+        }, 3000);
     </script>
 @endpush
-
