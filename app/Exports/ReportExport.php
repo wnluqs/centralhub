@@ -29,7 +29,8 @@ class ReportExport implements FromCollection, WithHeadings
             'event_code_name',
             'comment',
             'parts_request',
-            'terminal_status'
+            'terminal_status',
+            'staff_id',
         )
             ->get()
             ->map(fn($r) => [
@@ -41,6 +42,7 @@ class ReportExport implements FromCollection, WithHeadings
                 'comment'          => $r->comment,
                 'parts_request'    => $r->parts_request,
                 'terminal_status'  => $r->terminal_status,
+                'technician_name'  => optional($r->staff)->name ?? 'Unassigned',
             ]);
 
         // 2) Complaints
@@ -66,6 +68,7 @@ class ReportExport implements FromCollection, WithHeadings
                 'comment'          => $c->comment,
                 'parts_request'    => '',
                 'terminal_status'  => $c->terminal_status,
+                'technician_name'  => $c->technician->name ?? 'Unassigned',
             ]);
 
         // 3) Local Reports

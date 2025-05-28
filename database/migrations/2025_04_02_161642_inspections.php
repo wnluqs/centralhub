@@ -27,7 +27,7 @@ return new class extends Migration {
             // NEW: Separate Photo and Video Fields + Grading
             $table->string('photo_path')->nullable();
             $table->string('video_path')->nullable();
-            $table->enum('spare_grade', ['A', 'B', 'C'])->nullable();
+            $table->enum('keypad_grade', ['A', 'B', 'C'])->nullable();
 
             // Technician Name
             $table->string('submitted_by')->nullable();

@@ -85,9 +85,13 @@
                                     : json_decode($report->photos ?? '[]', true);
                             @endphp
 
-                            @foreach ($photos as $photo)
+                            @foreach ($photos as $i => $photo)
                                 @if (is_string($photo))
-                                    <img src="{{ asset('storage/' . $photo) }}" width="60" class="me-1 mb-1">
+                                    <a href="{{ asset('storage/' . $photo) }}" data-lightbox="photos-{{ $report->id }}"
+                                        data-title="Photo {{ $i + 1 }}">
+                                        <img src="{{ asset('storage/' . $photo) }}" width="60" class="me-1 mb-1"
+                                            style="cursor: zoom-in;">
+                                    </a>
                                 @endif
                             @endforeach
                         </td>
@@ -123,6 +127,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lightbox2@2.11.3/dist/js/lightbox.min.js"></script>
 
     <script>
         let table;
@@ -223,6 +228,7 @@
 @push('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/lightbox2@2.11.3/dist/css/lightbox.min.css" rel="stylesheet">
     <style>
         .dataTables_filter input,
         .dataTables_length select {

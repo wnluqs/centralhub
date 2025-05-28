@@ -16,4 +16,9 @@ class Report extends Model
     {
         return $this->belongsTo(Terminal::class, 'terminal_id', 'id');
     }
+
+    public function staff()
+    {
+        return $this->belongsTo(User::class, 'staff_id');
+    }
 }

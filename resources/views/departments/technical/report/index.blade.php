@@ -43,7 +43,7 @@
         </form>
 
         <div class="table-responsive">
-            <table class="table table-bordered table-hover text-center">
+            <table id="reportsTable" class="table table-bordered table-striped">
                 <thead class="table-dark">
                     <tr>
                         <th>Type</th>
@@ -73,15 +73,29 @@
                             <td>{{ \Carbon\Carbon::parse($r->event_date)->format('Y-m-d H:i:s') }}</td>
                             <td>
                                 @php
-                                    $decoded = json_decode($r->types_of_damages, true);
-                                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                                        echo implode(', ', $decoded);
-                                    } elseif (!empty($r->types_of_damages) && is_string($r->types_of_damages)) {
-                                        echo e($r->types_of_damages); // fallback if it’s already just a string
-                                    } else {
-                                        echo '-';
-                                    }
+                                    $decoded = is_string($r->types_of_damages)
+                                        ? json_decode($r->types_of_damages, true)
+                                        : (is_array($r->types_of_damages)
+                                            ? $r->types_of_damages
+                                            : []);
                                 @endphp
+
+                                <ul class="list-unstyled text-start m-0 p-0">
+                                    @if (!empty($decoded))
+                                        @foreach ($decoded as $label => $value)
+                                            <li>
+                                                • {{ $label }}:
+                                                @if (is_array($value))
+                                                    {{ $value['type'] ?? '-' }} ({{ $value['value'] ?? '0' }})
+                                                @else
+                                                    {{ $value }}
+                                                @endif
+                                            </li>
+                                        @endforeach
+                                    @else
+                                        <li>-</li>
+                                    @endif
+                                </ul>
                             </td>
                             <td>{{ $r->event_code_name ?? '-' }}</td>
                             <td>{{ $r->comment ?? '-' }}</td>
@@ -140,9 +154,11 @@
         $.fn.dataTable.ext.search.push(function(settings, data, index) {
             const min = $('#minDate').datepicker("getDate");
             const max = $('#maxDate').datepicker("getDate");
-            // Column 3 = Event Date (formatted dd/mm/yyyy HH:ii)
+
+            // Column 3 = Event Date (formatted YYYY-MM-DD)
             let dateStr = data[3].split(' ')[0];
-            const eventDate = $.datepicker.parseDate('dd/mm/yy', dateStr);
+            const parts = dateStr.split('-'); // ['2025', '05', '27']
+            const eventDate = new Date(parts[0], parts[1] - 1, parts[2]); // JS months are 0-based
 
             if ((!min && !max) ||
                 (!min && eventDate <= max) ||
@@ -156,21 +172,22 @@
         $(function() {
             // Initialize Datepickers
             $('#minDate, #maxDate').datepicker({
-                dateFormat: 'dd/mm/yy'
+                dateFormat: 'yy-mm-dd' // Matches Y-m-d format from Laravel
             });
 
             // Initialize DataTable
-            const table = $('.table').DataTable({
+            const table = $('#reportsTable').DataTable({
                 paging: true,
                 searching: true,
                 ordering: true,
                 order: [
                     [3, 'desc']
-                ],
+                ], // Order by Event Date
                 columnDefs: [{
-                    targets: [7, 8, 9],
-                    orderable: false
-                }],
+                        targets: [10, 11, 12],
+                        orderable: false
+                    } // Disable sorting on Technician, Photo, Terminal Status
+                ],
                 language: {
                     search: "Search table:",
                     lengthMenu: "Show _MENU_ entries",
@@ -178,8 +195,18 @@
                 }
             });
 
-            // Redraw on date change
+            // Redraw table on date filter change
             $('#minDate, #maxDate').on('change', () => table.draw());
         });
     </script>
+@endpush
+
+@push('styles')
+<style>
+    td ul {
+        padding-left: 1rem;
+        margin: 0;
+        text-align: left;
+    }
+</style>
 @endpush
