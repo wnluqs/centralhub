@@ -33,27 +33,28 @@ class ReportController extends Controller
         })->values(); // ✅ Reset index
 
         // 2) Complaint Reports
-        $complaints = Complaint::select(
-            'id',
-            'terminal_id',
-            'zone as location',
-            'created_at as event_date',
-            'types_of_damages',
-            DB::raw("'' as event_code_name"),
-            'remarks as comment',
-            DB::raw("'' as parts_request"),
-            'attended_at',
-            'fixed_at',
-            'photos as photo',
-            'status as terminal_status'
-        )
+        $complaints = Complaint::with('zone') // ✅ eager load the relationship
             ->when($terminal, fn($q) => $q->where('terminal_id', 'like', "%{$terminal}%"))
-            ->when($status,   fn($q) => $q->where('status', $status))
+            ->when($status, fn($q) => $q->where('status', $status))
             ->get()
             ->map(function ($c) {
-                $c->type = 'Complaint';
-                return $c;
-            })->values(); // ✅ Reset index
+                return (object)[
+                    'id' => $c->id,
+                    'terminal_id' => $c->terminal_id,
+                    'location' => $c->zone->name ?? '-', // ✅ zone name from relation
+                    'event_date' => $c->created_at,
+                    'types_of_damages' => $c->types_of_damages,
+                    'event_code_name' => '',
+                    'comment' => $c->remarks,
+                    'parts_request' => '',
+                    'attended_at' => $c->attended_at,
+                    'fixed_at' => $c->fixed_at,
+                    'photo' => $c->photos,
+                    'terminal_status' => $c->status,
+                    'technician_name' => optional($c->technician)->name, // optional for safety
+                    'type' => 'Complaint',
+                ];
+            })->values();
 
         // 3) Local Reports
         $local = LocalReport::select(
@@ -212,7 +213,7 @@ class ReportController extends Controller
             $items = Report::all()->map(fn($r) => [
                 'type'            => 'BTS',
                 'terminal_id'     => $r->terminal_id,
-                'location'        => '',           // fill if you have it
+                'location' => optional($c->zone)->name ?? '-',
                 'event_date'      => $r->event_date,
                 'event_code_name' => $r->event_code_name,
                 'comment'         => $r->comment,

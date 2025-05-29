@@ -9,8 +9,9 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\FromArray;
 
-class ReportExport implements FromCollection, WithHeadings
+class ReportExport implements FromArray, WithHeadings
 {
     protected $type;
 
@@ -19,7 +20,7 @@ class ReportExport implements FromCollection, WithHeadings
         $this->type = $type;
     }
 
-    public function collection(): Collection
+    public function array(): array
     {
         // 1) BTS
         $bts = Report::select(
@@ -30,7 +31,6 @@ class ReportExport implements FromCollection, WithHeadings
             'comment',
             'parts_request',
             'terminal_status',
-            'staff_id',
         )
             ->get()
             ->map(fn($r) => [
@@ -48,7 +48,7 @@ class ReportExport implements FromCollection, WithHeadings
         // 2) Complaints
         $complaints = Complaint::select(
             'terminal_id',
-            'zone as location',
+            'zone_id',
             'created_at as event_date',
             'types_of_damages',
             DB::raw("'' as event_code_name"),
@@ -68,13 +68,14 @@ class ReportExport implements FromCollection, WithHeadings
                 'comment'          => $c->comment,
                 'parts_request'    => '',
                 'terminal_status'  => $c->terminal_status,
-                'technician_name'  => $c->technician->name ?? 'Unassigned',
-            ]);
+            'technician_name' => optional($c->technician)->name ?? 'Unassigned'
+
+        ]);
 
         // 3) Local Reports
         $local = LocalReport::select(
             DB::raw("'' as terminal_id"),
-            'zone as location',
+            'zone as location', // ✅ zone name directly from `zone` column
             'created_at as event_date',
             DB::raw("'' as event_code_name"),
             'public_complaints as comment',
@@ -94,18 +95,19 @@ class ReportExport implements FromCollection, WithHeadings
                 'terminal_status'  => '',
                 'technician_name'  => $l->technician_name,
             ]);
-
         // Merge & sort
-        $all = $bts->merge($complaints)->merge($local)
-            ->sortByDesc('event_date')
-            ->values();
+        $all = collect(array_merge(
+            $bts->toArray(),
+            $complaints->toArray(),
+            $local->toArray()
+        ))->sortByDesc('event_date')->values();
 
         // Return filtered by type if requested
         return match ($this->type) {
-            'BTS'       => $bts,
-            'Complaint' => $complaints,
-            'Local'     => $local,
-            default     => $all,
+            'BTS'       => $bts->toArray(),
+            'Complaint' => $complaints->toArray(),
+            'Local'     => $local->toArray(),
+            default     => $all->toArray(),
         };
     }
 

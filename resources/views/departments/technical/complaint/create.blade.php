@@ -32,27 +32,36 @@
                 </select>
             </div>
 
-            <div class="form-group mb-3">
-                <label for="zone">Zone</label>
-                <select name="zone" id="zone" class="form-control" required>
-                    @foreach ($zones as $zone)
-                        <option value="{{ $zone }}">{{ $zone }}</option>
-                    @endforeach
-                </select>
+            {{-- Branch & Zone --}}
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="branch" class="form-label">Branch</label>
+                    <select name="branch" id="branch" class="form-control" required>
+                        <option value="">-- Select Branch --</option>
+                        <option value="Machang">Machang</option>
+                        <option value="Kuantan">Kuantan</option>
+                        <option value="Kuala Terengganu">Kuala Terengganu</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="zone" class="form-label">Zone</label>
+                    <select name="zone_id" id="zone" class="form-control" required disabled>
+                        <option value="">-- Select Zone --</option>
+                    </select>
+                </div>
             </div>
 
+            {{-- Road --}}
             <div class="form-group mb-3">
                 <label for="road">Road</label>
-                <select name="road" id="road" class="form-control" required>
-                    @foreach ($roads as $road)
-                        <option value="{{ $road }}">{{ $road }}</option>
-                    @endforeach
+                <select name="road" id="road" class="form-control" required disabled>
+                    <option value="">-- Select Road --</option>
                 </select>
             </div>
 
             <div class="form-group mb-3">
                 <label for="types_of_damages">Types of Damages</label>
-                <select name="types_of_damages[]" id="types_of_damages" class="form-control" multiple>
+                <select name="types_of_damages[]" id="types_of_damages" class="form-control select2" multiple>
                     <option value="Mesin Rosak">Mesin Rosak</option>
                     <option value="Coin Sangkut">Coin Sangkut</option>
                     <option value="Battery Low">Battery Low</option>
@@ -80,6 +89,63 @@
     <!-- CSS & JS for Select2 -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#types_of_damages').select2({
+                placeholder: 'Select types of damages',
+                width: '100%'
+            });
+            $('#zone').prop('disabled', true);
+            $('#road').prop('disabled', true);
+
+            $('#branch').on('change', function() {
+                const branch = $(this).val();
+                $('#zone').empty().append('<option value="">-- Select Zone --</option>').prop('disabled',
+                    true);
+                $('#road').empty().append('<option value="">-- Select Road --</option>').prop('disabled',
+                    true);
+
+                if (branch !== '') {
+                    $.get('/zones/' + branch, function(zones) {
+                        if (zones.length > 0) {
+                            $('#zone').prop('disabled', false);
+                            zones.forEach(function(z) {
+                                $('#zone').append('<option value="' + z.id + '">' + z.name +
+                                    '</option>');
+                            });
+                        } else {
+                            $('#zone').append('<option value="">No Zones Found</option>');
+                        }
+                    }).fail(function() {
+                        alert('Failed to load zones from server.');
+                    });
+                }
+            });
+
+            $('#zone').on('change', function() {
+                const zoneId = $(this).val();
+                $('#road').empty().append('<option value="">-- Select Road --</option>').prop('disabled',
+                    true);
+
+                if (zoneId !== '') {
+                    $.get('/roads/' + zoneId, function(roads) {
+                        if (roads.length > 0) {
+                            $('#road').prop('disabled', false);
+                            roads.forEach(function(r) {
+                                $('#road').append('<option value="' + r + '">' + r +
+                                    '</option>');
+                            });
+                        } else {
+                            $('#road').append('<option value="">No Roads Found</option>');
+                        }
+                    }).fail(function() {
+                        alert('Failed to load roads from server.');
+                    });
+                }
+            });
+        });
+    </script>
 
     <script>
         $(document).ready(function() {

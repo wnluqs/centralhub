@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TerminalController;
 use App\Http\Controllers\UserController; // Import the UserController fro 20th may 2025
 use App\Http\Controllers\RoadController; //improt as of 21st may 2025
+use App\Models\Complaint;
+use Illuminate\Http\Request;
 
 Route::post('/login', [LoginController::class, 'login']);  // Correct for API
 Route::get('/test-api', function () {
@@ -32,6 +34,8 @@ Route::delete('/complaints/{id}', [ComplaintsController::class, 'apiDelete']);
 // New route to handle resolving a complaint from mobile
 Route::post('/complaints/{id}/resolve', [ComplaintsController::class, 'apiResolve']);
 Route::get('/my-attended-complaints', [ComplaintsController::class, 'myAttendedComplaints']);
+// New route to fetch complaints by terminal ID
+Route::get('/complaints/latest-status-id', [ComplaintsController::class, 'latestStatusId']);
 
 //Local Report
 Route::get('/local_report', [LocalReportController::class, 'apiIndex']);

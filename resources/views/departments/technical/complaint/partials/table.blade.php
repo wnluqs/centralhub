@@ -21,7 +21,7 @@
             @forelse($complaints as $c)
                 <tr>
                     <td>{{ $c->terminal_id }}</td>
-                    <td>{{ $c->zone }}</td>
+                    <td>{{ optional($c->zone)->name ?? '-' }}</td>
                     <td>{{ ucfirst($c->road) }}</td>
                     <td>{{ $c->remarks }}</td>
                     <td>{{ $c->technician->name ?? '-' }}</td>

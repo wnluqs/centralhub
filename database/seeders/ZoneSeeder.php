@@ -11,7 +11,7 @@ class ZoneSeeder extends Seeder
     {
         $zones = [
             // Machang
-            ['name' => 'ZONE MACHANG', 'branch' => 'Machang'],
+            ['name' => 'Zone Machang', 'branch' => 'Machang'],
 
             // Kuantan (from Excel)
             'BALOK BARAT',

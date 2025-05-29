@@ -12,7 +12,7 @@ return new class extends Migration {
             $table->string('terminal_id');
             $table->foreign('terminal_id')->references('id')->on('terminals')->onDelete('cascade');
 
-            $table->string('zone')->nullable();
+            $table->string('zone_id')->nullable();
             $table->string('road')->nullable();
 
             $table->json('photos')->nullable(); // for multiple image uploads

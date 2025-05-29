@@ -11,7 +11,7 @@ class Complaint extends Model
 
     protected $fillable = [
         'terminal_id',
-        'zone',
+        'zone_id',
         'road',
         'remarks',
         'photos',
@@ -37,5 +37,10 @@ class Complaint extends Model
     public function technician()
     {
         return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function zone()
+    {
+        return $this->belongsTo(Zone::class, 'zone_id');
     }
 }

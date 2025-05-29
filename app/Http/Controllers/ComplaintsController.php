@@ -8,12 +8,14 @@ use App\Models\Complaint;
 use App\Models\Terminal;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ComplaintsExport;
+use App\Models\Road; // Assuming you have a Road model
+use App\Models\Zone; // Assuming you have a Zone model
 
 class ComplaintsController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Complaint::query();
+        $query = Complaint::with('zone');
 
         if ($request->filled('terminal_id')) {
             $query->where('terminal_id', 'like', "%{$request->terminal_id}%");
@@ -54,28 +56,27 @@ class ComplaintsController extends Controller
         $routeName = $request->route()->getName();
 
         if ($routeName === 'technical-complaints') {
-            return view('departments.technical.complaint.index', compact('available', 'inProgress'));
+            return view('departments.technical.complaint.index', compact('available', 'inProgress', 'query'));
         } elseif ($routeName === 'controlcenter-complaints') {
-            return view('departments.controlcenter.complaint.index', compact('available', 'inProgress'));
+            return view('departments.controlcenter.complaint.index', compact('available', 'inProgress', 'query'));
         } else {
-            return view('departments.technical.complaint.index', compact('available', 'inProgress'));
+            return view('departments.technical.complaint.index', compact('available', 'inProgress', 'query'));
         }
     }
 
     public function create()
     {
         $terminals = Terminal::all();
-        $zones = ['Kuala Penyu', 'Kuala Lipis', 'Maran', 'Raub', 'Kampung Raja', 'Chukai', 'Bandar Permaisuri']; // or fetch from DB if needed
-        $roads = ['Jalan Himalaya', 'Jalan Ampang', 'Jalan Bukit Tinggi', 'Jalan Starlight']; // or fetch from DB if needed
+        $branches = ['Machang', 'Kuantan', 'Kuala Terengganu']; // You may also fetch this from DB if available
 
-        return view('departments.technical.complaint.create', compact('zones', 'terminals', 'roads'));
+        return view('departments.technical.complaint.create', compact('terminals', 'branches'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'terminal_id' => 'required|exists:terminals,id',
-            'zone'        => 'required|string',
+            'zone_id'     => 'required|exists:zones,id', // ✅ now uses zone_id
             'road'        => 'required|string',
             'remarks'     => 'nullable|string',
             'types_of_damages' => 'nullable|array',
@@ -92,7 +93,7 @@ class ComplaintsController extends Controller
         }
 
         $validated['photos'] = json_encode($photoPaths);
-        $validated['types_of_damages'] = json_encode($request->types_of_damages ?? []);
+        $validated['types_of_damages'] = $request->types_of_damages ?? [];
         $validated['status'] = 'New';
         $validated['assigned_to'] = null; // Control Center will assign later
 
@@ -431,5 +432,18 @@ class ComplaintsController extends Controller
         $complaint->save();
 
         return redirect()->route('technical-complaints')->with('success', 'Complaint assigned successfully.');
+    }
+
+    public function latestStatusId()
+    {
+        $latest = Complaint::whereIn('status', ['In Progress', 'Resolved'])
+            ->latest('updated_at')
+            ->first();
+
+        return response()->json([
+            'latest_id' => $latest?->id ?? 0,
+            'updated_at' => $latest?->updated_at ?? now(),
+            'status' => $latest?->status ?? 'N/A',
+        ]);
     }
 }
