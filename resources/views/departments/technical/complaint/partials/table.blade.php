@@ -43,7 +43,7 @@
                             @endphp
 
                             @foreach ($photos as $p)
-                                <a href="{{ asset('storage/' . $p) }}" target="_blank">View</a><br>
+                                <a href="{{ $p }}" target="_blank">View</a><br>
                             @endforeach
                         @else
                             -

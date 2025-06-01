@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\FTLT;
 use App\Models\Terminal;
 use Illuminate\Support\Facades\Log;
+use App\Services\FirebaseUploader; // For Firebase file uploads
 
 class FTLTController extends Controller
 {
@@ -66,7 +67,8 @@ class FTLTController extends Controller
         $validated['staff_id'] = $user->staff_id;
         $validated['user_id'] = $user->id;
         $validated['check_in_time'] = now();
-        $validated['checkin_photo'] = $request->file('checkin_photo')->store('ftlt_photos', 'public');
+        $firebase = new FirebaseUploader();
+        $validated['checkin_photo'] = $firebase->uploadFile($request->file('checkin_photo'), 'ftlt_photos');
 
         FTLT::create($validated);
         return redirect()->route('ftlt.index')->with('success', 'Check-in successful!');
@@ -85,7 +87,8 @@ class FTLTController extends Controller
         ]);
 
         $ftlt = FTLT::findOrFail($id);
-        $ftlt->checkout_photo = $request->file('checkout_photo')->store('ftlt_photos', 'public');
+        $firebase = new FirebaseUploader();
+        $ftlt->checkout_photo = $firebase->uploadFile($request->file('checkout_photo'), 'ftlt_photos');
         $ftlt->check_out_time = now();
         $ftlt->notes = $request->input('notes');
         $ftlt->save();
@@ -109,7 +112,8 @@ class FTLTController extends Controller
         ]);
 
         $validated['user_id'] = (int) $validated['user_id'];
-        $validated['checkin_photo'] = $request->file('checkin_photo')->store('ftlt_photos', 'public');
+        $firebase = new FirebaseUploader();
+        $validated['checkin_photo'] = $firebase->uploadFile($request->file('checkin_photo'), 'ftlt_photos');
 
         FTLT::create($validated);
         return response()->json(['message' => 'Check-In saved'], 201);
@@ -139,7 +143,9 @@ class FTLTController extends Controller
 
         $entry->check_out_time = $validated['check_out_time'];
         $entry->location = $validated['location'];
-        $entry->checkout_photo = $request->file('checkout_photo')->store('ftlt_photos', 'public');
+        $firebase = new FirebaseUploader();
+        $entry->checkout_photo = $firebase->uploadFile($request->file('checkout_photo'), 'ftlt_photos');
+
         $entry->save();
 
         return response()->json(['message' => 'Check-Out updated'], 200);
@@ -162,12 +168,14 @@ class FTLTController extends Controller
             'checkout_photo' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
         ]);
 
+        $firebase = new FirebaseUploader();
+
         if ($request->hasFile('checkin_photo')) {
-            $validated['checkin_photo'] = $request->file('checkin_photo')->store('ftlt_photos', 'public');
+            $validated['checkin_photo'] = $firebase->uploadFile($request->file('checkin_photo'), 'ftlt_photos');
         }
 
         if ($request->hasFile('checkout_photo')) {
-            $validated['checkout_photo'] = $request->file('checkout_photo')->store('ftlt_photos', 'public');
+            $validated['checkout_photo'] = $firebase->uploadFile($request->file('checkout_photo'), 'ftlt_photos');
         }
 
         $ftlt->update($validated);

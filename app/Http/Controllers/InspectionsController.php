@@ -3,11 +3,16 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use App\Models\Inspection;
 use App\Models\Terminal;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\InspectionsExport;
 use Carbon\Carbon;
+use App\Services\FirebaseUploader;  // ✅ <-- Use your service class!
+
+// If you have a FirebaseUploader class, import it here
+// use App\Services\FirebaseUploader;
 
 class InspectionsController extends Controller
 {
@@ -101,6 +106,7 @@ class InspectionsController extends Controller
 
     public function store(Request $request)
     {
+        // 1️⃣ Validation — Perfectly fine
         $validated = $request->validate([
             'terminal_id'     => 'required|exists:terminals,id',
             'zone'            => 'required|string',
@@ -109,41 +115,42 @@ class InspectionsController extends Controller
             'spare_parts.*'   => 'string',
             'status'          => 'required|in:Complete,Failed,Almost',
             'branch'          => 'required|string|in:Kuantan,Machang,Kuala Terengganu',
-            'screen' => 'nullable|string',
-            'keypad' => 'nullable|string',
-            'sticker' => 'nullable|string',
-            'solar' => 'nullable|string',
-            'environment' => 'nullable|string',
-            'submitted_by' => 'required|string',
-            'photo_path.*' => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
+            'screen'          => 'nullable|string',
+            'keypad'          => 'nullable|string',
+            'sticker'         => 'nullable|string',
+            'solar'           => 'nullable|string',
+            'environment'     => 'nullable|string',
+            'submitted_by'    => 'required|string',
+            'photo_path.*'    => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
             'video_path'      => 'nullable|file|mimes:mp4,mov,avi|max:20480',
-            'keypad_grade'     => 'nullable|in:A,B,C',
+            'keypad_grade'    => 'nullable|in:A,B,C',
         ]);
 
-        $photoPaths = [];
+        // 2️⃣ FirebaseUploader Instantiation — ✔✅
+        $firebase = new FirebaseUploader();
+
+        // 3️⃣ Upload Photos (multiple)
         if ($request->hasFile('photo_path')) {
             foreach ($request->file('photo_path') as $photo) {
-                $photoPaths[] = $photo->store('inspection_photos', 'public');
+                $photoPaths[] = $firebase->uploadFile($photo, 'inspection_photos');
             }
             $validated['photo_path'] = json_encode($photoPaths);
         }
 
         if ($request->hasFile('video_path')) {
-            $validated['video_path'] = $request->file('video_path')->store('inspection_videos', 'public');
+            $validated['video_path'] = $firebase->uploadFile($request->file('video_path'), 'inspection_videos');
         }
 
+        // 5️⃣ Save to DB
         Inspection::create($validated);
 
-
-        // Smart response based on request type
+        // 6️⃣ Return response
         if ($request->expectsJson()) {
             return response()->json(['message' => 'Inspection created successfully!'], 200);
         } else {
-            return redirect()->route('inspections.index')
-                ->with('success', 'Inspection created successfully!');
+            return redirect()->route('inspections.index')->with('success', 'Inspection created successfully!');
         }
     }
-
 
     public function edit($id)
     {
@@ -174,12 +181,18 @@ class InspectionsController extends Controller
             'environment' => 'nullable|string',
         ]);
 
+        $firebase = new FirebaseUploader();
+
         if ($request->hasFile('photo_path')) {
-            $validated['photo_path'] = $request->file('photo_path')->store('inspection_photos', 'public');
+            $photoPaths = [];
+            foreach ($request->file('photo_path') as $photo) {
+                $photoPaths[] = $firebase->uploadFile($photo, 'inspection_photos');
+            }
+            $validated['photo_path'] = json_encode($photoPaths);
         }
 
         if ($request->hasFile('video_path')) {
-            $validated['video_path'] = $request->file('video_path')->store('inspection_videos', 'public');
+            $validated['video_path'] = $firebase->uploadFile($request->file('video_path'), 'inspection_videos');
         }
 
         $inspection->update($validated);
@@ -262,16 +275,18 @@ class InspectionsController extends Controller
             'keypad_grade' => 'nullable|in:A,B,C',
         ]);
 
-        $photoPaths = [];
+        $firebase = new FirebaseUploader();
+
+        // 3️⃣ Upload Photos (multiple)
         if ($request->hasFile('photo_path')) {
             foreach ($request->file('photo_path') as $photo) {
-                $photoPaths[] = $photo->store('inspection_photos', 'public');
+                $photoPaths[] = $firebase->uploadFile($photo, 'inspection_photos');
             }
             $validated['photo_path'] = json_encode($photoPaths);
         }
 
         if ($request->hasFile('video_path')) {
-            $validated['video_path'] = $request->file('video_path')->store('inspection_videos', 'public');
+            $validated['video_path'] = $firebase->uploadFile($request->file('video_path'), 'inspection_videos');
         }
 
         $inspection = Inspection::create($validated);
@@ -306,12 +321,18 @@ class InspectionsController extends Controller
             'keypad_grade' => 'nullable|in:A,B,C',
         ]);
 
+        $firebase = new FirebaseUploader();
+
         if ($request->hasFile('photo_path')) {
-            $validated['photo_path'] = $request->file('photo_path')->store('inspection_photos', 'public');
+            $photoPaths = [];
+            foreach ($request->file('photo_path') as $photo) {
+                $photoPaths[] = $firebase->uploadFile($photo, 'inspection_photos');
+            }
+            $validated['photo_path'] = json_encode($photoPaths);
         }
 
         if ($request->hasFile('video_path')) {
-            $validated['video_path'] = $request->file('video_path')->store('inspection_videos', 'public');
+            $validated['video_path'] = $firebase->uploadFile($request->file('video_path'), 'inspection_videos');
         }
 
         $inspection->update($validated);

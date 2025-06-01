@@ -7,6 +7,7 @@ use App\Models\LocalReport;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Road;
 use App\Models\Zone;
+use App\Services\FirebaseUploader; // For Firebase file uploads
 
 class LocalReportController extends Controller
 {
@@ -56,24 +57,34 @@ class LocalReportController extends Controller
         $validated['latitude'] = $request->input('latitude');
         $validated['longitude'] = $request->input('longitude');
 
+        $firebase = new FirebaseUploader();
         // Process photos
         $photoPaths = [];
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $photo) {
-                $photoPaths[] = $photo->store('local_report_photos', 'public');
+                $photoPaths[] = $firebase->uploadFile($photo, 'local_report_photos');
             }
             $validated['photos'] = json_encode($photoPaths);
         }
 
         // Process videos
+        // Process videos
         $videoPaths = [];
+
         if ($request->hasFile('videos')) {
-            foreach ($request->file('videos') as $video) {
-                $videoPaths[] = $video->store('local_report_videos', 'public');
+            $videos = $request->file('videos');
+
+            // ✅ If single file, wrap into array
+            if (!is_array($videos)) {
+                $videos = [$videos];
             }
+
+            foreach ($videos as $video) {
+                $videoPaths[] = $firebase->uploadFile($video, 'local_report_videos');
+            }
+
             $validated['videos'] = json_encode($videoPaths);
         }
-
         // JSON encode checkbox fields
         // Handle dynamic public complaints with sub-values
         $public = [];
@@ -203,21 +214,32 @@ class LocalReportController extends Controller
         $validated['latitude'] = $request->input('latitude');
         $validated['longitude'] = $request->input('longitude');
 
-        // ✅ Handle file uploads
-        $photoPath = [];
+        $firebase = new FirebaseUploader();
+        // Process photos
+        $photoPaths = [];
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $photo) {
-                $photoPath[] = $photo->store('local_report_photos', 'public');
+                $photoPaths[] = $firebase->uploadFile($photo, 'local_report_photos');
             }
+            $validated['photos'] = json_encode($photoPaths);
         }
-        $validated['photos'] = json_encode($photoPath);
+        // Process videos
+        $videoPaths = [];
 
-        $videoPath = null;
         if ($request->hasFile('videos')) {
-            $videoPath = $request->file('videos')->store('local_report_videos', 'public');
-        }
-        $validated['videos'] = json_encode($videoPath ? [$videoPath] : []);
+            $videos = $request->file('videos');
 
+            // ✅ If single file, wrap into array
+            if (!is_array($videos)) {
+                $videos = [$videos];
+            }
+
+            foreach ($videos as $video) {
+                $videoPaths[] = $firebase->uploadFile($video, 'local_report_videos');
+            }
+
+            $validated['videos'] = json_encode($videoPaths);
+        }
         // Re-encode for storage
         $validated['public_complaints'] = isset($validated['public_complaints'])
             ? json_encode($validated['public_complaints'])

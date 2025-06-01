@@ -84,13 +84,13 @@
                             <td>{{ $ftlt->check_out_time ?? '-' }}</td>
                             <td>
                                 @if ($ftlt->checkin_photo)
-                                    <a href="{{ asset('storage/' . $ftlt->checkin_photo) }}" target="_blank"
+                                    <a href="{{ asset($ftlt->checkin_photo) }}" target="_blank"
                                         class="btn btn-outline-light btn-sm">View</a>
                                 @endif
                             </td>
                             <td>
                                 @if ($ftlt->check_out_time)
-                                    <a href="{{ asset('storage/' . $ftlt->checkout_photo) }}" target="_blank"
+                                    <a href="{{ asset($ftlt->checkout_photo) }}" target="_blank"
                                         class="btn btn-outline-light btn-sm">View</a>
                                 @else
                                     @if (auth()->user()->hasRole('Admin') || $ftlt->staff_id === auth()->user()->staff_id)

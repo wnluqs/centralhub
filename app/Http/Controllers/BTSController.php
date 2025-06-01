@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Terminal;
 use App\Models\Report;
 use Illuminate\Support\Facades\Log;
+use App\Services\FirebaseUploader; //added for Firebase file uploads
 
 class BTSController extends Controller
 {
@@ -83,9 +84,12 @@ class BTSController extends Controller
             'terminal_status' => 'required|in:Okay,Off',
         ]);
 
+        // Photo Upload
+        $firebase = new FirebaseUploader();
+
         if ($request->hasFile('photo')) {
-            $path = $request->file('photo')->store('bts_photos', 'public');
-            $validated['photo'] = $path;
+            $firebase = new FirebaseUploader();
+            $validated['photo'] = $firebase->uploadFile($request->file('photo'), 'bts_photos');
         }
 
         $validated['staff_id'] = Auth::user()->staff_id;
@@ -208,8 +212,14 @@ class BTSController extends Controller
             // DO NOT validate staff_id here — keep it separate
         ]);
 
-        if ($request->hasFile('photo')) {
-            $validated['photo'] = $request->file('photo')->store('bts_photos', 'public');
+        $firebase = new FirebaseUploader();
+
+        if ($request->hasFile('photo_path')) {
+            $photoPaths = [];
+            foreach ($request->file('photo_path') as $photo) {
+                $photoPaths[] = $firebase->uploadFile($photo, 'bts_photos');
+            }
+            $validated['photo_path'] = json_encode($photoPaths);
         }
 
         // Step 3: Reassign staff_id manually

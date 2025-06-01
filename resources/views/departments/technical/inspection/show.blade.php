@@ -62,13 +62,12 @@
                 <th>Photo</th>
                 <td style="display: flex; flex-wrap: wrap; gap: 10px;">
                     @if ($inspection->photo_path)
-                        @php $photos = json_decode($inspection->photo_path, true); @endphp
+                        @php
+                            $photos = json_decode($inspection->photo_path, true);
+                        @endphp
                         @if (is_array($photos))
-                            @foreach ($photos as $photo)
-                                <a href="{{ asset('storage/' . $photo) }}" data-lightbox="inspection-gallery">
-                                    <img src="{{ asset('storage/' . $photo) }}" alt="Photo" class="img-thumbnail"
-                                        style="width: 100px; height: auto;">
-                                </a>
+                            @foreach ($photos as $photoUrl)
+                                <img src="{{ $photoUrl }}" width="200" />
                             @endforeach
                         @else
                             <a href="{{ asset('storage/' . $inspection->photo_path) }}" data-lightbox="inspection-gallery">
@@ -86,7 +85,7 @@
                 <td>
                     @if ($inspection->video_path)
                         <video controls style="max-width: 400px;">
-                            <source src="{{ asset('storage/' . $inspection->video_path) }}" type="video/mp4">
+                            <source src="{{ $inspection->video_path }}" type="video/mp4">
                             Your browser does not support the video tag.
                         </video>
                     @else
@@ -100,9 +99,9 @@
 
 {{-- Lightbox2 Assets Only for This Page --}}
 @push('styles')
-<link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet">
 @endpush
 
 @push('scripts')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
 @endpush

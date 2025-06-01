@@ -9,6 +9,7 @@
             <th>Event Code - Name</th>
             <th>Comment</th>
             @if ($mode === 'in_progress')
+                <th>Parts Request</th>
                 <th>Terminal Status</th>
                 <th>Created At (Attended)</th>
             @endif
@@ -45,6 +46,7 @@
                 <td>{{ $item->comment ?? '-' }}</td>
 
                 @if ($mode === 'in_progress')
+                    <td>{{ $item->parts_request ?? '-' }}</td>
                     <td>
                         @if (!empty($item->terminal_status))
                             <span class="badge bg-{{ $item->terminal_status === 'Off' ? 'danger' : 'success' }}">

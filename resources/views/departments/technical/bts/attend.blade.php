@@ -34,12 +34,12 @@
                 <div class="form-group mb-3">
                     <label>Parts Request</label>
                     <select name="parts_request" class="form-control" required>
-                        <option value="" disabled selected>Select Parts Request</option>
-                        <option>Printer</option>
-                        <option>Door</option>
-                        <option>Battery</option>
-                        <option>Compact Screen</option>
-                        <option>Solar Panel</option>
+                        <option value="" disabled {{ old('parts_request', $bts->parts_request) == null ? 'selected' : '' }}>Select Parts Request</option>
+                        <option value="Printer" {{ old('parts_request', $bts->parts_request) == 'Printer' ? 'selected' : '' }}>Printer</option>
+                        <option value="Door" {{ old('parts_request', $bts->parts_request) == 'Door' ? 'selected' : '' }}>Door</option>
+                        <option value="Battery" {{ old('parts_request', $bts->parts_request) == 'Battery' ? 'selected' : '' }}>Battery</option>
+                        <option value="Compact Screen" {{ old('parts_request', $bts->parts_request) == 'Compact Screen' ? 'selected' : '' }}>Compact Screen</option>
+                        <option value="Solar Panel" {{ old('parts_request', $bts->parts_request) == 'Solar Panel' ? 'selected' : '' }}>Solar Panel</option>
                     </select>
                 </div>
 

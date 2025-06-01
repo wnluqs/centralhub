@@ -19,6 +19,7 @@ class BTS extends Model
         'event_date',
         'event_code_name',
         'comment',
+        'parts_request',
         'terminal_status',
         'damage_type',
         'action_by',

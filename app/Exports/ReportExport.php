@@ -68,9 +68,8 @@ class ReportExport implements FromArray, WithHeadings
                 'comment'          => $c->comment,
                 'parts_request'    => '',
                 'terminal_status'  => $c->terminal_status,
-            'technician_name' => optional($c->technician)->name ?? 'Unassigned'
-
-        ]);
+                'technician_name' => optional($c->technician)->name ?? 'Unassigned'
+            ]);
 
         // 3) Local Reports
         $local = LocalReport::select(

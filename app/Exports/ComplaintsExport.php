@@ -20,18 +20,21 @@ class ComplaintsExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        // 1. Build the query
-        $query = Complaint::select('terminal_id', 'zone', 'road', 'remarks', 'created_at');
+        // Eager load zone relationship
+        $query = Complaint::with('zone');
 
-        // 2. Apply filters if present
+        // Apply filters
         if ($this->terminalId) {
             $query->where('terminal_id', 'like', "%{$this->terminalId}%");
         }
+
         if ($this->zone) {
-            $query->where('zone', 'like', "%{$this->zone}%");
+            // Filter by zone name via relationship
+            $query->whereHas('zone', function ($q) {
+                $q->where('name', 'like', "%{$this->zone}%");
+            });
         }
 
-        // 3. Return the filtered collection
         return $query->get();
     }
 
@@ -44,10 +47,10 @@ class ComplaintsExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             $complaint->terminal_id,
-            $complaint->zone,
+            $complaint->zone->name ?? '-', // Access zone name via relationship
             $complaint->road,
             $complaint->remarks,
-            $complaint->created_at->format('Y-m-d H:i:s'), // Format timestamp
+            $complaint->created_at->format('Y-m-d H:i:s'),
         ];
     }
 }

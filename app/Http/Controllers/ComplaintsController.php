@@ -10,6 +10,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ComplaintsExport;
 use App\Models\Road; // Assuming you have a Road model
 use App\Models\Zone; // Assuming you have a Zone model
+use App\Services\FirebaseUploader;
 
 class ComplaintsController extends Controller
 {
@@ -84,11 +85,13 @@ class ComplaintsController extends Controller
             'photos.*'    => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
         ]);
 
+        $firebase = new FirebaseUploader();
+
         // Handle photo uploads
         $photoPaths = [];
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $photo) {
-                $photoPaths[] = $photo->store('complaint_photos', 'public');
+                $photoPaths[] = $firebase->uploadFile($photo, 'complaints_photos');
             }
         }
 
@@ -368,20 +371,18 @@ class ComplaintsController extends Controller
             $complaint->attended_at = now();
         }
 
-        // 👷 Auto-assign to current user if not already assigned
+        // Auto-assign to current user if not already assigned
         if ($complaint->assigned_to === null) {
             $complaint->assigned_to = auth()->id();
         }
 
         $complaint->remarks = $request->remarks;
-        $complaint->status = 'In Progress'; // Force In Progress no matter what
 
-        // ✅ Handle uploaded fix photo (optional)
+        // ✅ Use FirebaseUploader for fix photo
         if ($request->hasFile('fixed_photo')) {
-            $file = $request->file('fixed_photo');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('public/complaint_photos', $filename);
-            $complaint->fixed_photo = $filename;
+            $firebase = new FirebaseUploader();
+            $uploadedPath = $firebase->uploadFile($request->file('fixed_photo'), 'complaints_fixed_photos');
+            $complaint->fixed_photo = $uploadedPath;
         }
 
         $complaint->save();

@@ -87,9 +87,9 @@
 
                             @foreach ($photos as $i => $photo)
                                 @if (is_string($photo))
-                                    <a href="{{ asset('storage/' . $photo) }}" data-lightbox="photos-{{ $report->id }}"
+                                    <a href="{{ asset($photo) }}" data-lightbox="photos-{{ $report->id }}"
                                         data-title="Photo {{ $i + 1 }}">
-                                        <img src="{{ asset('storage/' . $photo) }}" width="60" class="me-1 mb-1"
+                                        <img src="{{ asset($photo) }}" width="60" class="me-1 mb-1"
                                             style="cursor: zoom-in;">
                                     </a>
                                 @endif
@@ -104,8 +104,7 @@
 
                             @foreach ($videos as $video)
                                 @if (is_string($video))
-                                    <a href="{{ asset('storage/' . $video) }}" target="_blank"
-                                        class="btn btn-sm btn-outline-primary">
+                                    <a href="{{ asset($video) }}" target="_blank" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-play-circle"></i> View Video
                                     </a>
                                 @endif
@@ -186,16 +185,21 @@
                                 formatComplaints(pubComplaints, report.public_others),
                                 formatComplaints(opsComplaints, report.operations_others),
                                 photos.map(photo =>
-                                    `<img src="/storage/${photo}" width="60" class="me-1 mb-1">`
+                                    `<img src="${photo}" width="60" class="me-1 mb-1">`
                                 ).join(''),
+
                                 videos.map(video =>
-                                    `<a href="/storage/${video}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-play-circle"></i> View Video</a>`
+                                    `<a href="${video}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-play-circle"></i> View Video</a>`
                                 ).join(''),
                                 report.technician_name,
                                 new Date(report.created_at).toLocaleString()
                             ]).draw(false).node();
 
                             $(rowNode).addClass('flash-new');
+                            // 🔄 Re-initialize Lightbox for newly added elements
+                            if (typeof lightbox !== 'undefined' && lightbox.refresh) {
+                                lightbox.refresh();
+                            }
                         });
 
                         $('html, body').animate({

@@ -74,16 +74,16 @@
                             <select name="public_complaints[Halangan Dalam Petak][type]" class="form-control mb-2">
                                 <option value="">-- Pilih Jenis Halangan --</option>
                                 <option value="RORO Bin">RORO Bin</option>
-                                <option value="Crane">Crane</option>
-                                <option value="Trash Can">Trash Can</option>
+                                <option value="Kren">Kren</option>
+                                <option value="Tong Sampah">Trash Can</option>
                                 <option value="Peraih/Peniaga Pasar">Peraih/Peniaga Pasar</option>
                                 <option value="Kontraktor Binaan">Kontraktor Binaan</option>
                                 <option value="Kanopi Sewaan">Kanopi Sewaan</option>
                                 <option value="Pembuangan/Pengumpulan Sampah">Pembuangan/Pengumpulan Sampah</option>
                                 <option value="Wujudnya Ramp Laluan Masuk ke Premis Oleh Pekedai">Wujudnya Ramp Laluan Masuk
                                     ke Premis Oleh Pekedai</option>
-                                <option value="Car Wash">Car Wash</option>
-                                <option value="Kereta Usang/Tersadai">Kereta Usang/Tersadai</option>
+                                <option value="Pencuci Kertea">Car Wash</option>
+                                <option value="Kereta Usang/Tersadai/Bengkel">Kereta Usang/Tersadai</option>
                             </select>
                             <input type="number" name="public_complaints[Halangan Dalam Petak][value]" class="form-control"
                                 placeholder="Nilai (0–100)" min="0" max="100">
@@ -179,6 +179,13 @@
                             <input type="number" name="operations_complaints[Papan Tanda Maklumat Rosak]"
                                 class="form-control" placeholder="Nilai untuk Papan Tanda Maklumat Rosak" min="0"
                                 max="100">
+                        </div>
+
+                        {{-- Nombor Petak --}}
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Nombor Petak</label>
+                            <input type="text" name="operations_parking_number" class="form-control"
+                                placeholder="Masukkan nombor petak">
                         </div>
 
                         {{-- Bollard Rosak --}}

@@ -9,6 +9,7 @@ use App\Http\Middleware\CheckRole; // <-- Import your custom middleware
 use Spatie\Permission\Middlewares\RoleMiddleware;
 use Spatie\Permission\Middlewares\PermissionMiddleware;
 use Spatie\Permission\Middlewares\RoleOrPermissionMiddleware;
+use Kreait\Laravel\Firebase\LaravelFirebaseServiceProvider;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
