@@ -4,6 +4,7 @@
         <thead class="table-light">
             <tr>
                 <th>Terminal ID</th>
+                <th>Landmark</th>
                 <th>Zone</th>
                 <th>Road</th>
                 <th>Remarks</th>
@@ -13,6 +14,7 @@
                 <th>Fixed At</th>
                 <th>Status</th>
                 <th>Photos</th>
+                <th>Fixed Photo</th>
                 <th style="display:none;">Created At</th>
                 <th>Actions</th>
             </tr>
@@ -21,6 +23,7 @@
             @forelse($complaints as $c)
                 <tr>
                     <td>{{ $c->terminal_id }}</td>
+                    <td>{{ $c->landmark_description ?? '-' }}</td>
                     <td>{{ optional($c->zone)->name ?? '-' }}</td>
                     <td>{{ ucfirst($c->road) }}</td>
                     <td>{{ $c->remarks }}</td>
@@ -45,6 +48,13 @@
                             @foreach ($photos as $p)
                                 <a href="{{ $p }}" target="_blank">View</a><br>
                             @endforeach
+                        @else
+                            -
+                        @endif
+                    </td>
+                    <td>
+                        @if ($c->fixed_photo)
+                            <a href="{{ $c->fixed_photo }}" target="_blank">View Fixed Photo</a>
                         @else
                             -
                         @endif
@@ -86,7 +96,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="11" class="text-center">No complaints available.</td>
+                    <td colspan="12" class="text-center">No complaints available.</td>
                 </tr>
             @endforelse
         </tbody>

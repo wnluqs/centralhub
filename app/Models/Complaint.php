@@ -13,6 +13,7 @@ class Complaint extends Model
         'terminal_id',
         'zone_id',
         'road',
+        'landmark_description',  // ✅ new field
         'remarks',
         'photos',
         'status',

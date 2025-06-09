@@ -76,18 +76,23 @@ class ComplaintsController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'terminal_id' => 'required|exists:terminals,id',
-            'zone_id'     => 'required|exists:zones,id', // ✅ now uses zone_id
+            'terminal_id' => 'nullable|exists:terminals,id',   // ✅ Now nullable
+            'zone_id'     => 'required|exists:zones,id',
             'road'        => 'required|string',
+            'landmark_description' => 'nullable|string',       // ✅ New field
             'remarks'     => 'nullable|string',
             'types_of_damages' => 'nullable|array',
             'types_of_damages.*' => 'string',
             'photos.*'    => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
         ]);
 
+        // SAFETY LOGIC: Require at least terminal_id OR landmark_description
+        if (empty($request->terminal_id) && empty($request->landmark_description)) {
+            return back()->withErrors('Either Terminal ID or Landmark Description is required.');
+        }
+
         $firebase = new FirebaseUploader();
 
-        // Handle photo uploads
         $photoPaths = [];
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $photo) {
@@ -98,7 +103,7 @@ class ComplaintsController extends Controller
         $validated['photos'] = json_encode($photoPaths);
         $validated['types_of_damages'] = $request->types_of_damages ?? [];
         $validated['status'] = 'New';
-        $validated['assigned_to'] = null; // Control Center will assign later
+        $validated['assigned_to'] = null;
 
         $complaint = Complaint::create($validated);
 
@@ -275,10 +280,10 @@ class ComplaintsController extends Controller
         }
 
         $roles = $user->getRoleNames();
-        \Log::info('Authenticated user: ' . $user->name . ' (ID: ' . $user->id . ', Roles: ' . json_encode($roles) . ')');
 
         if ($roles->contains('Technical')) {
-            $data = Complaint::where('assigned_to', $user->id)
+            $data = Complaint::with('zone')  // ✅ ADD THIS
+                ->where('assigned_to', $user->id)
                 ->whereIn('status', ['New', 'In Progress', 'Resolved'])
                 ->latest()
                 ->get();
@@ -286,29 +291,34 @@ class ComplaintsController extends Controller
             return response()->json($data, 200);
         }
 
-        // 🛠 Ensure this always returns an array
-        $allData = Complaint::whereIn('status', ['New', 'In Progress', 'Resolved'])
+        $allData = Complaint::with('zone')  // ✅ ADD THIS
+            ->whereIn('status', ['New', 'In Progress', 'Resolved'])
             ->latest()
             ->get();
 
-        return response()->json($allData->values(), 200); // <-- use ->values() to ensure it's a proper array
+        return response()->json($allData->values(), 200);
     }
 
     public function apiStore(Request $request)
     {
         $validated = $request->validate([
-            'terminal_id' => 'required|string', // ← you should ensure this is here!
+            'terminal_id' => 'nullable|string',   // ✅ Make nullable now
             'zone' => 'required|string',
             'road' => 'required|string',
+            'landmark_description' => 'nullable|string',  // ✅ Add this
             'remarks' => 'nullable|string',
             'types_of_damages' => 'nullable|array',
             'types_of_damages.*' => 'string',
             'description' => 'nullable|string',
-            'status' => 'required|string', // e.g., Pending, Resolved
-            // add more fields as needed
+            'status' => 'required|string',
         ]);
 
-        // ✅ Encode the array if it exists
+        if (empty($request->terminal_id) && empty($request->landmark_description)) {
+            return response()->json([
+                'error' => 'Either Terminal ID or Landmark Description is required.'
+            ], 422);
+        }
+
         if (isset($validated['types_of_damages'])) {
             $validated['types_of_damages'] = json_encode($validated['types_of_damages']);
         }

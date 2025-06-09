@@ -117,5 +117,10 @@
                 el.classList.remove('newly-added');
             });
         }, 3000);
+        // ✅ Smart periodic refresh
+        setInterval(function() {
+            // Reload full page but force Laravel route to re-render data
+            window.location.reload(true);
+        }, 12000); // Refresh every 12 seconds (12,000ms)
     </script>
 @endpush

@@ -122,7 +122,7 @@ class InspectionsController extends Controller
             'environment'     => 'nullable|string',
             'submitted_by'    => 'required|string',
             'photo_path.*'    => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
-            'video_path'      => 'nullable|file|mimes:mp4,mov,avi|max:20480',
+            'video_path'      => 'nullable|file|mimes:mp4,mov,avi|max:`102400',
             'keypad_grade'    => 'nullable|in:A,B,C',
         ]);
 
@@ -172,7 +172,7 @@ class InspectionsController extends Controller
             'branch'          => 'required|string|in:Kuantan,Machang,Kuala Terengganu',
             'submitted_by' => 'required|string',
             'photo_path'      => 'nullable|file|mimes:jpeg,png,jpg,heic,heif|max:20480',
-            'video_path'      => 'nullable|file|mimes:mp4,mov,avi|max:20480',
+            'video_path'      => 'nullable|file|mimes:mp4,mov,avi|max:102400',
             'spare_grade'     => 'nullable|in:A,B,C',
             'screen' => 'nullable|string',
             'keypad' => 'nullable|string',
@@ -271,7 +271,7 @@ class InspectionsController extends Controller
             'environment' => 'nullable|string',
             'submitted_by' => 'required|string',
             'photo_path.*' => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
-            'video_path' => 'nullable|file|mimes:mp4,mov,avi|max:20480',
+            'video_path' => 'nullable|file|mimes:mp4,mov,avi|max:102400',
             'keypad_grade' => 'nullable|in:A,B,C',
         ]);
 
@@ -285,8 +285,19 @@ class InspectionsController extends Controller
             $validated['photo_path'] = json_encode($photoPaths);
         }
 
-        if ($request->hasFile('video_path')) {
-            $validated['video_path'] = $firebase->uploadFile($request->file('video_path'), 'inspection_videos');
+        if ($request->has('video_path')) {
+            $uploadedFile = $request->video_path;
+
+            if ($uploadedFile instanceof \Illuminate\Http\UploadedFile) {
+                // normal file (rarely happens in this case)
+                $validated['video_path'] = $firebase->uploadFile($uploadedFile, 'inspection_videos');
+            } else {
+                // handle fromBytes manually (most likely your case)
+                $tmpPath = tempnam(sys_get_temp_dir(), 'video_') . '.mp4';
+                file_put_contents($tmpPath, $uploadedFile);
+                $fileObject = new \Illuminate\Http\File($tmpPath);
+                $validated['video_path'] = $firebase->uploadFile($fileObject, 'inspection_videos');
+            }
         }
 
         $inspection = Inspection::create($validated);
@@ -317,7 +328,7 @@ class InspectionsController extends Controller
             'environment' => 'nullable|string',
             'submitted_by' => 'sometimes|string',
             'photo_path.*' => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
-            'video_path' => 'nullable|file|mimes:mp4,mov,avi|max:20480',
+            'video_path' => 'nullable|file|mimes:mp4,mov,avi|max:102400',
             'keypad_grade' => 'nullable|in:A,B,C',
         ]);
 

@@ -21,4 +21,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
-"storage/firebase/*.json" 
+# Ignore firebase credentials
+storage/firebase/*.json
+

@@ -32,6 +32,11 @@
                 </select>
             </div>
 
+            <div class="form-group mb-3">
+                <label for="landmark_description">Landmark Description (if Terminal ID unknown)</label>
+                <input type="text" name="landmark_description" id="landmark_description" class="form-control" placeholder="e.g. In front of Bank Islam Kuantan">
+            </div>
+
             {{-- Branch & Zone --}}
             <div class="row mb-3">
                 <div class="col-md-6">

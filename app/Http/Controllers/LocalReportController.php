@@ -45,7 +45,7 @@ class LocalReportController extends Controller
             'latitude' => 'nullable|numeric', //added on 24th May2024
             'longitude' => 'nullable|numeric',
             'photos.*' => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
-            'videos.*' => 'nullable|file|mimes:mp4,mov,avi|max:20480',
+            'videos.*' => 'nullable|file|mimes:mp4,mov,avi|max:102400', // 100MB max for videos
         ]);
 
         $validated['zone'] = $request->input('zone');
@@ -200,7 +200,7 @@ class LocalReportController extends Controller
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric', //added on 24th May 2024
             'photos.*' => 'nullable|image|mimes:jpeg,png,jpg|max:20480',
-            'videos' => 'nullable|file|mimes:mp4,mov,avi|max:20480',
+            'videos' => 'nullable|file|mimes:mp4,mov,avi|max:102400',
         ]);
 
         // Convert zone ID to zone name for API input

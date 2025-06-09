@@ -64,20 +64,21 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             setTimeout(() => {
-                ['availableTable', 'progressTable'].forEach(function(tableId) {
+                ['availableTable', 'progressTable'].forEach(function (tableId) {
                     const $table = $('#' + tableId);
                     if ($table.length && $.fn.DataTable.isDataTable('#' + tableId)) {
                         $table.DataTable().clear().destroy();
                     }
                     if ($table.length) {
+                        const totalColumns = $table.find('thead th').length;
+                        const hiddenColIndex = totalColumns - 2; // Adjust based on your 'Created At' being hidden
+
                         $table.DataTable({
-                            order: [
-                                [10, 'desc']
-                            ],
+                            order: [[hiddenColIndex, 'desc']],
                             columnDefs: [{
-                                targets: [10],
+                                targets: [hiddenColIndex],
                                 visible: false
                             }],
                             language: {
@@ -88,7 +89,7 @@
                         });
                     }
                 });
-            }, 300); // slight delay after page load to ensure DOM is ready
+            }, 300);
         });
     </script>
     <script>
@@ -119,6 +120,6 @@
             });
         }
 
-        setInterval(checkComplaintStatusUpdate, 10000); // every 10 seconds
+        setInterval(checkComplaintStatusUpdate, 30000); // every 30 seconds
     </script>
 @endpush

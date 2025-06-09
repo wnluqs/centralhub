@@ -80,7 +80,7 @@ class BTSController extends Controller
         $validated = $request->validate([
             'comment' => 'required|string',
             'parts_request' => 'required|string', // New field
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',  // <-- now required
             'terminal_status' => 'required|in:Okay,Off',
         ]);
 
@@ -214,14 +214,10 @@ class BTSController extends Controller
 
         $firebase = new FirebaseUploader();
 
-        if ($request->hasFile('photo_path')) {
-            $photoPaths = [];
-            foreach ($request->file('photo_path') as $photo) {
-                $photoPaths[] = $firebase->uploadFile($photo, 'bts_photos');
-            }
-            $validated['photo_path'] = json_encode($photoPaths);
+        if ($request->hasFile('photo')) {
+            $firebasePath = $firebase->uploadFile($request->file('photo'), 'bts_photos');
+            $validated['photo'] = $firebasePath;
         }
-
         // Step 3: Reassign staff_id manually
         $validated['action_status'] = 'In Progress';
         $validated['action_by'] = auth()->id() ?? 1;

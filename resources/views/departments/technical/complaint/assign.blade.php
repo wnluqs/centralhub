@@ -2,6 +2,9 @@
 
 @section('content')
 <div class="container">
+    <a href="{{ route('technical-complaints') }}" class="btn btn-secondary mb-3">
+        ← Back to Technical Complaints
+    </a>
     <h2>Assign Complaint</h2>
 
     <form action="{{ route('technical.complaints.assign.update', $complaint->id) }}" method="POST">

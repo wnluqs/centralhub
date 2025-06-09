@@ -14,6 +14,9 @@
                 <th>Created At (Attended)</th>
             @endif
             <th>Action</th>
+            @if ($mode === 'in_progress')
+                <th>Photo</th>
+            @endif
         </tr>
     </thead>
     <tbody>
@@ -75,6 +78,13 @@
                             </form>
                         @else
                             <span class="badge bg-warning text-dark">Pending</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if ($item->photo)
+                            <a href="{{ $item->photo }}" target="_blank">View Photo</a>
+                        @else
+                            <span class="text-muted">-</span>
                         @endif
                     </td>
                 @elseif ($mode === 'available')

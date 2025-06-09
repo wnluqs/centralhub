@@ -44,8 +44,8 @@
                 </div>
 
                 <div class="form-group mb-3">
-                    <label>Upload Photo (Optional)</label>
-                    <input type="file" name="photo" class="form-control" accept="image/*">
+                    <label for="photo">Upload Photo</label>
+                    <input type="file" name="photo" id="photo" class="form-control" required>
                 </div>
 
                 <div class="form-group mb-3">

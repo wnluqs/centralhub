@@ -13,15 +13,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // $this->call(ComplaintSeeder::class);  ← optional, comment if needed
-        // Other seeders...
-        $this->call(TerminalParkingSeeder::class);
-        $this->call(TerminalSeeder::class);
         $this->call([
             RoleSeeder::class,
             AdminSeeder::class,
             ZoneSeeder::class,
             RoadSeeder::class,
+            TerminalSeeder::class,          // <-- Must run BEFORE
+            TerminalParkingSeeder::class,  // <-- Safe to run after TerminalSeeder
         ]);
     }
 }
