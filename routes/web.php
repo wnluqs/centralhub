@@ -26,6 +26,7 @@ use App\Http\Controllers\TerminalController; // Newly added Terminal controller
 use App\Http\Controllers\LocationController; // Newly added Location controller 5 May 2025
 use App\Http\Controllers\CallInboundController; // Newly added Call Inbound controller on 5th May 2025 CC
 use App\Http\Controllers\RoadController; // Newly added Road controller on 19th May 2025
+use App\Http\Controllers\BatteryReplacementController; // Newly added Battery Replacement controller on 10th June 2025
 
 // ---------------------------------------------------------------------
 // Models
@@ -220,6 +221,16 @@ Route::prefix('technical')->group(function () {
     Route::get('/complaint/{id}/assign', [ComplaintsController::class, 'assignTechnical'])->name('technical.complaints.assign');
     Route::put('/complaint/{id}/assign', [ComplaintsController::class, 'updateAssignTechnical'])->name('technical.complaints.assign.update');
     Route::get('/complaint/{id}/attend', [ComplaintsController::class, 'attend'])->name('technical.complaints.attend');
+    // ---------------------------------------------------------------------
+    // Battery Replacement Routes added on 10th June 2025
+    // ---------------------------------------------------------------------
+    Route::middleware(['auth'])->prefix('technical')->group(function () {
+        Route::get('/', [BatteryReplacementController::class, 'index'])->name('battery.index');
+        Route::get('/create', [BatteryReplacementController::class, 'create'])->name('battery.create');
+        Route::post('/store', [BatteryReplacementController::class, 'store'])->name('battery.store');
+        Route::get('/attend/{id}', [BatteryReplacementController::class, 'attend'])->name('battery.attend');
+        Route::post('/update/{id}', [BatteryReplacementController::class, 'updateAttend'])->name('battery.update');
+    });
 });
 
 // ---------------------------------------------------------------------
@@ -275,6 +286,8 @@ Route::get('/inspections/export/excel', [InspectionsController::class, 'exportEx
 Route::get('/complaint/export/csv', [ComplaintsController::class, 'exportCsv'])->name('complaints.export.csv');
 Route::get('/complaint/export/excel', [ComplaintsController::class, 'exportExcel'])->name('complaints.export.excel');
 
+Route::get('/technical/battery/export/excel', [BatteryReplacementController::class, 'exportExcel'])->name('battery.export.excel');
+Route::get('/technical/battery/export/csv', [BatteryReplacementController::class, 'exportCsv'])->name('battery.export.csv');
 // ---------------------------------------------------------------------
 // Logout Route
 // ---------------------------------------------------------------------

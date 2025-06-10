@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Terminal extends Model
 {
     // Let Eloquent know the primary key is 'id', but it is not an integer
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'terminal_id';
     public $incrementing = false;
     protected $keyType = 'string';
 

@@ -118,14 +118,19 @@ class BTSController extends Controller
 
     public function searchTerminals(Request $request)
     {
-        $search = $request->get('q');
+        $search = $request->get('term'); // Select2 uses 'term' not 'q'
 
-        $terminals = Terminal::where('id', 'like', "%$search%")
+        $terminals = Terminal::where('id', 'LIKE', "%$search%")
             ->orderBy('id', 'asc')
             ->limit(20)
             ->get(['id']);
 
-        return response()->json($terminals);
+        // return as Select2 expects: [{id: ..., text: ...}]
+        $results = $terminals->map(function ($terminal) {
+            return ['id' => $terminal->id, 'text' => $terminal->id];
+        });
+
+        return response()->json($results);
     }
 
     public function verify($id)
@@ -164,26 +169,33 @@ class BTSController extends Controller
 
     public function apiStore(Request $request)
     {
-        $validated = $request->validate([
-            'terminal_id'     => 'required|exists:terminals,id',
-            'status'          => 'required|string',
-            'location'        => 'required|string',
-            'event_date'      => 'required|date',
-            'event_code_name' => 'required|string',
-            'comment'         => 'nullable|string',
-        ]);
+        try {
+            Log::info('Incoming Request:', $request->all());
 
-        $validated['action_status'] = 'New';
-        $validated['action_by'] = null;
-        $validated['terminal_status'] = 'Okay';
-        $validated['staff_id'] = auth()->user()->staff_id ?? null;
+            $validated = $request->validate([
+                'terminal_id'     => 'required|exists:terminals,id', // ✅ numeric ID directly
+                'status'          => 'required|string',
+                'location'        => 'required|string',
+                'event_date'      => 'required|date',
+                'event_code_name' => 'required|string',
+                'comment'         => 'nullable|string',
+            ]);
 
-        $bts = BTS::create($validated);
+            $validated['action_status'] = 'New';
+            $validated['action_by'] = null;
+            $validated['terminal_status'] = 'Okay';
+            $validated['staff_id'] = auth()->user()->staff_id ?? null;
 
-        return response()->json([
-            'message' => 'BTS created successfully',
-            'data' => $bts
-        ], 201);
+            $bts = BTS::create($validated);
+
+            return response()->json([
+                'message' => 'BTS created successfully',
+                'data' => $bts
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('BTS apiStore Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Server error: ' . $e->getMessage()], 500);
+        }
     }
 
     public function apiUpdate(Request $request, $id)

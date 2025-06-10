@@ -12,6 +12,7 @@ use App\Http\Controllers\UserController; // Import the UserController fro 20th m
 use App\Http\Controllers\RoadController; //improt as of 21st may 2025
 use App\Models\Complaint;
 use Illuminate\Http\Request;
+use App\Http\Controllers\BatteryReplacementController; // Import the BatteryReplacementController for 10th June 2025
 
 Route::post('/login', [LoginController::class, 'login']);  // Correct for API
 Route::get('/test-api', function () {
@@ -56,6 +57,7 @@ Route::get('/bts', [BTSController::class, 'apiIndex']);
 Route::post('/bts/{id}', [BTSController::class, 'apiUpdate']); // ✅ Laravel accepts via _method=PUT
 Route::delete('/bts/{id}', [BTSController::class, 'apiDelete']);
 Route::put('/bts/{id}', [BTSController::class, 'apiUpdate']);
+Route::post('/bts', [BTSController::class, 'apiStore']);
 
 //Terminal id
 Route::get('/search-terminal', [TerminalController::class, 'search']);
@@ -65,3 +67,9 @@ Route::middleware('auth:sanctum')->get('/me', [UserController::class, 'me']);
 
 //Fetch Roads by Zone
 Route::get('/roads/{zone}', [RoadController::class, 'getByZone']);
+
+// Battery Replacements for 6th Module
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/battery', [BatteryReplacementController::class, 'apiIndex']);
+    Route::post('/battery/{id}/submit', [BatteryReplacementController::class, 'apiSubmit']);
+});

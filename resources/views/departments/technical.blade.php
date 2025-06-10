@@ -36,6 +36,12 @@
                     <h5>Complaints</h5>
                 </a>
             </div>
+            <div class="col-md-4 mb-4">
+                <a href="{{ route('battery.index') }}" class="dashboard-card">
+                    <img src="{{ asset('images/technical/battery.png') }}" alt="Battery Replacement Icon">
+                    <h5>Battery Replacement</h5>
+                </a>
+            </div>
         </div>
 
         <!-- 🛠️ FIELD TOOLS -->
