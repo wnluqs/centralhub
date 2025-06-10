@@ -8,7 +8,7 @@ return new class extends Migration {
     public function up()
     {
         Schema::table('inspections', function (Blueprint $table) {
-            $table->longText('photo_path')->nullable()->change();
+            $table->text('photo_path')->nullable()->change();
             $table->longText('video_path')->nullable()->change();
         });
     }
