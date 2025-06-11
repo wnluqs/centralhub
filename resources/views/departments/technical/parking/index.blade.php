@@ -11,8 +11,6 @@
 
         <!-- Filter Form -->
         <form action="{{ route('technical.terminal_parking') }}" method="GET" class="mb-3">
-
-            <!-- Export Buttons -->
             <div class="row mt-3">
                 <div class="col-md-12 text-end">
                     <a href="{{ route('technical.terminal_parking.export.csv', request()->only('search', 'terminal_number', 'location', 'zone_code')) }}"
@@ -39,7 +37,7 @@
             <tbody>
                 @foreach ($terminals as $terminal)
                     <tr>
-                        <td>{{ $terminal->terminal?->id ?? 'N/A' }}</td>
+                        <td>{{ $terminal->terminal?->id ?? ($terminal->terminal_id ?? 'N/A') }}</td>
                         <td>{{ $terminal->branch ?? '-' }}</td>
                         <td>{{ $terminal->status ?? '-' }}</td>
                         <td>{{ $terminal->location ?? 'No Location' }}</td>
@@ -47,13 +45,12 @@
                         <td>{{ $terminal->longitude ?? '0.0000000' }}</td>
                         <td>
                             <a href="{{ route('terminal_parking.edit_location', $terminal->id) }}"
-                                class="btn btn-sm btn-warning">
-                                Edit Location
-                            </a>
+                                class="btn btn-sm btn-warning">Edit Location</a>
                         </td>
                     </tr>
                 @endforeach
-                <!-- Temporary test row -->
+
+                <!-- ✅ Add demo rows inside the same tbody -->
                 <tr>
                     <td>TEST001</td>
                     <td>HQ</td>
@@ -88,8 +85,6 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
-    <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAHrTNapLSbPaD2ViANNf_ptGGvVxVf6Rs&callback=initMap"></script>
 
     <script>
         $(document).ready(function() {
@@ -101,7 +96,8 @@
             });
         });
 
-        function initMap() {
+        // ✅ Global initMap function
+        window.initMap = function() {
             const map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 8,
                 center: {
@@ -112,7 +108,6 @@
 
             const terminals = @json($terminals);
 
-            // Inject test markers
             terminals.push({
                 terminal: {
                     id: 'TEST001'
@@ -126,7 +121,7 @@
                 terminal: {
                     id: 'TEST002'
                 },
-                latitude: '3.232',
+                latitude: '3.2320',
                 longitude: '101.7000',
                 location: 'Kuala Lumpur',
                 status: 'Inactive',
@@ -140,7 +135,7 @@
                 const lat = parseFloat(t.latitude);
                 const lng = parseFloat(t.longitude);
 
-                if (lat !== 0 && lng !== 0) {
+                if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
                     const marker = new google.maps.Marker({
                         position: {
                             lat,
@@ -154,19 +149,22 @@
 
                     marker.addListener('click', () => {
                         infoWindow.setContent(`
-                    <div style="font-size:14px;">
-                        <strong>${t.terminal?.id ?? 'N/A'}</strong><br>
-                        <b>Branch:</b> ${t.branch ?? 'N/A'}<br>
-                        <b>Status:</b> ${t.status ?? 'Unknown'}
-                    </div>
-                `);
+                            <div style="font-size:14px;">
+                                <strong>${t.terminal?.id ?? 'N/A'}</strong><br>
+                                <b>Branch:</b> ${t.branch ?? 'N/A'}<br>
+                                <b>Status:</b> ${t.status ?? 'Unknown'}
+                            </div>
+                        `);
                         infoWindow.open(map, marker);
                     });
                 }
             });
 
-            // Fit map to markers
             map.fitBounds(bounds);
-        }
+        };
     </script>
+
+    <!-- ✅ Script must come AFTER defining initMap -->
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAHrTNapLSbPaD2ViANNf_ptGGvVxVf6Rs&callback=initMap"></script>
 @endpush

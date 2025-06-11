@@ -17,7 +17,6 @@ class TerminalParking extends Model
 
     public function terminal()
     {
-        return $this->belongsTo(Terminal::class, 'terminal_id');
+        return $this->belongsTo(Terminal::class, 'terminal_id', 'id');
     }
-
 }

@@ -36,7 +36,12 @@ class TerminalParkingController extends Controller
         }
 
         // ✅ Eager load related terminal info
-        $terminals = $query->get(); // instead of paginate(10)
+        $terminals = $query
+            ->join('terminals', 'terminal_parkings.terminal_id', '=', 'terminals.id') // ✅ Join to access terminal ID
+            ->orderBy('terminals.id') // ✅ Sort by real terminal ID like KN1A01
+            ->select('terminal_parkings.*') // ✅ Avoid column conflict
+            ->with('terminal') // ✅ Still eager load relationship
+            ->get();
 
         return view('departments.technical.parking.index', compact('terminals'));
     }
