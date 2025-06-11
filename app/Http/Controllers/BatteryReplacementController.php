@@ -86,8 +86,10 @@ class BatteryReplacementController extends Controller
     // API for Mobile
     public function apiIndex()
     {
-        $staffId = auth()->user()->staff_id;
-        $jobs = BatteryReplacement::where('staff_id', $staffId)->where('status', 'Assigned')->get();
+        $jobs = BatteryReplacement::where('status', 'Assigned')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return response()->json($jobs);
     }
 
@@ -98,9 +100,9 @@ class BatteryReplacementController extends Controller
         $request->validate([
             'photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'comment' => 'nullable|string',
+            'staff_id' => 'required|string',
         ]);
 
-        // ✅ Firebase upload for mobile too
         $firebase = new FirebaseUploader();
         $photoPath = $firebase->uploadFile($request->file('photo'), 'battery_photos');
 
@@ -108,8 +110,8 @@ class BatteryReplacementController extends Controller
             'photo' => $photoPath,
             'comment' => $request->comment,
             'status' => 'Submitted',
-            'staff_id' => auth()->user()->staff_id,
-            'submitted_by' => auth()->id(),
+            'staff_id' => $request->staff_id,
+            'submitted_by' => null, // Optional: or pass from Flutter if needed
         ]);
 
         return response()->json(['message' => 'Battery job submitted successfully']);

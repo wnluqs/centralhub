@@ -59,6 +59,13 @@ Route::delete('/bts/{id}', [BTSController::class, 'apiDelete']);
 Route::put('/bts/{id}', [BTSController::class, 'apiUpdate']);
 Route::post('/bts', [BTSController::class, 'apiStore']);
 
+// Battery Replacements for 6th Module
+Route::get('/battery', [BatteryReplacementController::class, 'apiIndex']);
+Route::post('/battery/{id}/submit', [BatteryReplacementController::class, 'apiSubmit']);
+Route::post('/battery', [BatteryReplacementController::class, 'apiStore']);
+Route::put('/battery/{id}', [BatteryReplacementController::class, 'apiUpdate']);
+Route::delete('/battery/{id}', [BatteryReplacementController::class, 'apiDelete']);
+
 //Terminal id
 Route::get('/search-terminal', [TerminalController::class, 'search']);
 
@@ -67,9 +74,3 @@ Route::middleware('auth:sanctum')->get('/me', [UserController::class, 'me']);
 
 //Fetch Roads by Zone
 Route::get('/roads/{zone}', [RoadController::class, 'getByZone']);
-
-// Battery Replacements for 6th Module
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/battery', [BatteryReplacementController::class, 'apiIndex']);
-    Route::post('/battery/{id}/submit', [BatteryReplacementController::class, 'apiSubmit']);
-});
