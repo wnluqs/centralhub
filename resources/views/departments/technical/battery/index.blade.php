@@ -109,7 +109,15 @@
                                 <td>{{ $job->staff_id ?? '-' }}</td>
                                 <td>
                                     @if ($job->photo)
-                                        <a href="{{ asset('storage/' . $job->photo) }}" target="_blank">View</a>
+                                        @if (Str::startsWith($job->photo, ['http://', 'https://']))
+                                            <a href="{{ $job->photo }}" target="_blank">
+                                                <img src="{{ $job->photo }}" alt="Battery Photo" width="100" />
+                                            </a>
+                                        @else
+                                            <a href="{{ asset('storage/' . $job->photo) }}" target="_blank">
+                                                <img src="{{ asset('storage/' . $job->photo) }}" alt="Battery Photo" width="100" />
+                                            </a>
+                                        @endif
                                     @else
                                         -
                                     @endif

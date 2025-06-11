@@ -13,6 +13,7 @@ use App\Http\Controllers\RoadController; //improt as of 21st may 2025
 use App\Models\Complaint;
 use Illuminate\Http\Request;
 use App\Http\Controllers\BatteryReplacementController; // Import the BatteryReplacementController for 10th June 2025
+use App\Http\Controllers\Api\NotificationController; // Import the NotificationController for 11th June 2025
 
 Route::post('/login', [LoginController::class, 'login']);  // Correct for API
 Route::get('/test-api', function () {
@@ -74,3 +75,10 @@ Route::middleware('auth:sanctum')->get('/me', [UserController::class, 'me']);
 
 //Fetch Roads by Zone
 Route::get('/roads/{zone}', [RoadController::class, 'getByZone']);
+
+// NOTIFICATION
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::get('/notifications/unread', [NotificationController::class, 'apiUnread']);
+});

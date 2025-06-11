@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Google\Cloud\Storage\StorageClient;
+use Illuminate\Support\Str;
 
 class FirebaseUploader
 {
@@ -11,8 +12,15 @@ class FirebaseUploader
 
     public function __construct()
     {
+        $firebasePath = base_path(env('FIREBASE_CREDENTIALS'));
+
+        // ✅ Check if path exists and is a valid file (not directory)
+        if (!file_exists($firebasePath) || is_dir($firebasePath)) {
+            throw new \Exception("⚠️ Firebase credentials file is missing or is a directory: $firebasePath");
+        }
+
         $this->storage = new StorageClient([
-            'keyFilePath' => base_path(env('FIREBASE_CREDENTIALS')),
+            'keyFilePath' => $firebasePath,
         ]);
 
         $this->bucket = $this->storage->bucket(env('FIREBASE_STORAGE_BUCKET'));
@@ -22,7 +30,7 @@ class FirebaseUploader
     {
         $fileName = uniqid() . '_' . $file->getClientOriginalName();
         $path = $folder . '/' . $fileName;
-        $uuid = (string) \Str::uuid();
+        $uuid = (string) Str::uuid();
 
         $object = $this->bucket->upload(
             fopen($file->getRealPath(), 'r'),
@@ -36,10 +44,10 @@ class FirebaseUploader
             ]
         );
 
-        // Optional: make public if you still want direct public access
+        // Make file public (optional)
         $object->update(['acl' => []], ['predefinedAcl' => 'PUBLICREAD']);
 
-        // Return Firebase-style URL
+        // ✅ Return accessible Firebase URL
         return sprintf(
             'https://firebasestorage.googleapis.com/v0/b/%s/o/%s?alt=media&token=%s',
             env('FIREBASE_STORAGE_BUCKET'),

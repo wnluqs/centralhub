@@ -11,6 +11,7 @@ use App\Exports\ComplaintsExport;
 use App\Models\Road; // Assuming you have a Road model
 use App\Models\Zone; // Assuming you have a Zone model
 use App\Services\FirebaseUploader;
+use App\Models\Notification; // Added on 11th June for the 2nd hardest fucntion
 
 class ComplaintsController extends Controller
 {
@@ -200,6 +201,14 @@ class ComplaintsController extends Controller
         $complaint->status = 'In Progress';
         $complaint->attended_at = now();
         $complaint->save();
+        // 🔔 Create a notification
+        Notification::create([
+            'user_id' => $request->technician_id,
+            'title' => 'New Complaint Assigned',
+            'body' => 'You have been assigned a new complaint at terminal ID: ' . ($complaint->terminal_id ?? 'N/A'),
+            'module' => 'Complaint',
+            'reference_id' => $complaint->id,
+        ]);
 
         return redirect()->route('technical-complaints')->with('success', 'Complaint assigned with multiple damages.');
     }

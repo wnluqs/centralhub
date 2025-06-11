@@ -2,6 +2,7 @@
 
 @section('content')
 <div class="container">
+    <a href="{{ route('battery.index') }}" class="btn btn-secondary mb-3">← Back to Battery Module</a>
     <h2>Attend Battery Job ({{ $job->terminal_id }})</h2>
 
     <form action="{{ route('battery.update', $job->id) }}" method="POST" enctype="multipart/form-data">
