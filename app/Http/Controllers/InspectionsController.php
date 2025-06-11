@@ -122,7 +122,7 @@ class InspectionsController extends Controller
             'environment'     => 'nullable|string',
             'submitted_by'    => 'required|string',
             'photo_path.*'    => 'nullable|image|mimes:jpeg,png,jpg,heic,heif|max:20480',
-            'video_path'      => 'nullable|file|mimes:mp4,mov,avi|max:`102400',
+            'video_path' => 'nullable|file|mimes:mp4,mov,avi|max:102400',
             'keypad_grade'    => 'nullable|in:A,B,C',
         ]);
 

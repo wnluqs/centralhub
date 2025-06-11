@@ -86,10 +86,7 @@ class BatteryReplacementController extends Controller
     // API for Mobile
     public function apiIndex()
     {
-        $jobs = BatteryReplacement::where('status', 'Assigned')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
+        $jobs = BatteryReplacement::orderBy('created_at', 'desc')->get();
         return response()->json($jobs);
     }
 

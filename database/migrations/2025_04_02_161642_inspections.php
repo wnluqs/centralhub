@@ -25,8 +25,8 @@ return new class extends Migration {
             $table->enum('status', ['Complete', 'Failed', 'Almost']);
 
             // NEW: Separate Photo and Video Fields + Grading
-            $table->string('photo_path')->nullable();
-            $table->string('video_path')->nullable();
+            $table->text('photo_path')->nullable();
+            $table->longText('video_path')->nullable();
             $table->enum('keypad_grade', ['A', 'B', 'C'])->nullable();
 
             // Technician Name
