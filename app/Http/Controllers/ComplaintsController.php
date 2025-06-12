@@ -198,8 +198,8 @@ class ComplaintsController extends Controller
 
         $complaint = Complaint::findOrFail($id);
         $complaint->assigned_to = $request->user_id; // ✅ use correct input
-        $complaint->status = 'In Progress';
-        $complaint->attended_at = now();
+        // ✅ DO NOT set status or attended_at here
+        // Let the technician trigger "Attend" from mobile
         $complaint->save();
         // 🔔 Create a notification
         Notification::create([
