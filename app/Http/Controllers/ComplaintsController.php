@@ -193,23 +193,25 @@ class ComplaintsController extends Controller
     public function assignUpdate(Request $request, $id)
     {
         $request->validate([
-            'technician_id' => 'required|exists:users,id',
+            'user_id' => 'required|exists:users,id', // ✅ match input name
         ]);
 
         $complaint = Complaint::findOrFail($id);
-        $complaint->assigned_to = $request->technician_id;
+        $complaint->assigned_to = $request->user_id; // ✅ use correct input
         $complaint->status = 'In Progress';
         $complaint->attended_at = now();
         $complaint->save();
         // 🔔 Create a notification
         Notification::create([
-            'user_id' => $request->technician_id,
-            'title' => 'New Complaint Assigned',
-            'body' => 'You have been assigned a new complaint at terminal ID: ' . ($complaint->terminal_id ?? 'N/A'),
+            'user_id' => $request->user_id, // ✅ Use from the form request
+            'title' => 'You have a new complaint assigned',
+            'body' => 'Please check the complaint module to proceed.',
             'module' => 'Complaint',
             'reference_id' => $complaint->id,
+            'is_read' => false, // ✅ Must be false initially
         ]);
 
+        // dd($request->all());
         return redirect()->route('technical-complaints')->with('success', 'Complaint assigned with multiple damages.');
     }
 
@@ -225,7 +227,7 @@ class ComplaintsController extends Controller
     public function reassignUpdate(Request $request, $id)
     {
         $request->validate([
-            'technician_id' => 'required|exists:users,id',
+            'user_id' => 'required|exists:users,id',
         ]);
 
         $complaint = Complaint::findOrFail($id);

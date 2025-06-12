@@ -219,7 +219,7 @@ Route::prefix('technical')->group(function () {
     Route::get('/technical/complaint/{id}/attend', [ComplaintsController::class, 'attend'])->name('technical.complaints.attend');
     Route::post('/complaint/{id}/attend', [ComplaintsController::class, 'submitAttendance'])->name('technical.complaints.attend.submit');
     Route::get('/complaint/{id}/assign', [ComplaintsController::class, 'assignTechnical'])->name('technical.complaints.assign');
-    Route::put('/complaint/{id}/assign', [ComplaintsController::class, 'updateAssignTechnical'])->name('technical.complaints.assign.update');
+    Route::put('/complaint/{id}/assign', [ComplaintsController::class, 'assignUpdate'])->name('technical.complaints.assign.update');
     Route::get('/complaint/{id}/attend', [ComplaintsController::class, 'attend'])->name('technical.complaints.attend');
     // ---------------------------------------------------------------------
     // Battery Replacement Routes added on 10th June 2025
