@@ -23,8 +23,8 @@ class FTLTController extends Controller
             $query->where('staff_id', auth()->user()->staff_id);
         }
 
-        if ($request->filled('zone')) {
-            $query->where('zone', $request->zone);
+        if ($request->filled('branch')) {
+            $query->where('branch', $request->branch);
         }
 
         if ($request->filled('start_time') && $request->filled('end_time')) {
@@ -53,7 +53,7 @@ class FTLTController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'zone'           => 'required|string',
+            'branch' => 'required|string',
             'location'       => 'required|string',
             'checkin_photo'  => 'required|image|mimes:jpeg,jpg,png|max:5120',
             'notes'          => 'nullable|string',
@@ -66,6 +66,7 @@ class FTLTController extends Controller
 
         $validated['staff_id'] = $user->staff_id;
         $validated['user_id'] = $user->id;
+        $validated['branch'] = auth()->user()->branch;
         $validated['check_in_time'] = now();
         $firebase = new FirebaseUploader();
         $validated['checkin_photo'] = $firebase->uploadFile($request->file('checkin_photo'), 'ftlt_photos');
@@ -104,7 +105,7 @@ class FTLTController extends Controller
         $validated = $request->validate([
             'staff_id'      => 'required|string',
             'name'          => 'required|string',
-            'zone'          => 'required|string',
+            'branch'       => 'required|string',
             'location'      => 'required|string',
             'check_in_time' => 'required|date',
             'checkin_photo' => 'required|image|mimes:jpeg,jpg,png|max:5120',

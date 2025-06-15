@@ -27,15 +27,12 @@
             </div>
 
             <div class="form-group">
-                <label for="zone">Zone</label>
-                <select name="zone" class="form-control" required>
-                    <option value="" disabled selected>Select Zone</option>
-                    <option>Ampang</option>
-                    <option>Mount Kiara</option>
-                    <option>KLCC</option>
-                    <option>Chincatown</option>
-                    <option>Bukit Bintang</option>
-                    <option>Bangsar</option>
+                <label for="branch">Branch</label>
+                <select name="branch" class="form-control" required>
+                    <option value="" disabled selected>Select Branch</option>
+                    <option>Kuantan</option>
+                    <option>Kuala Terengganu</option>
+                    <option>Machang</option>
                 </select>
             </div>
             @if (auth()->check())

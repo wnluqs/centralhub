@@ -24,14 +24,14 @@
                     </div>
                 </div>
 
-                <!-- Filter by Zone -->
+                <!-- Filter by Branch -->
                 <div class="col-md-3">
-                    <label for="zone" class="form-label">Zone</label>
-                    <select name="zone" id="zone" class="form-select">
-                        <option value="">All Zones</option>
-                        @foreach (['Kuala Terengganu', 'Kuantan', 'Machang'] as $z)
-                            <option value="{{ $z }}" {{ request('zone') == $z ? 'selected' : '' }}>
-                                {{ $z }}</option>
+                    <label for="branch" class="form-label">Branch</label>
+                    <select name="branch" id="branch" class="form-select">
+                        <option value="">All Branches</option>
+                        @foreach (['Kuantan', 'Kuala Terengganu', 'Machang'] as $b)
+                            <option value="{{ $b }}" {{ request('branch') == $b ? 'selected' : '' }}>
+                                {{ $b }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -64,7 +64,7 @@
                         <th>#</th>
                         <th>Staff ID</th>
                         <th>Name</th>
-                        <th>Zone</th>
+                        <th>Branch</th>
                         <th>Location</th>
                         <th>Check-In Time</th>
                         <th>Check-Out Time</th>
@@ -78,7 +78,7 @@
                             <td>{{ ($ftlts->currentPage() - 1) * $ftlts->perPage() + $index + 1 }}</td>
                             <td>{{ $ftlt->staff_id }}</td>
                             <td>{{ $ftlt->user->name ?? '-' }}</td>
-                            <td>{{ $ftlt->zone ?? '-' }}</td>
+                            <td>{{ $ftlt->branch ?? '-' }}</td>
                             <td>{{ $ftlt->location }}</td>
                             <td>{{ $ftlt->check_in_time }}</td>
                             <td>{{ $ftlt->check_out_time ?? '-' }}</td>

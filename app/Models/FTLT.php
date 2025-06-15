@@ -12,6 +12,7 @@ class FTLT extends Model
     use HasFactory;
 
     protected $fillable = [
+        'branch', // ✅ Add this
         'zone',
         'location',
         'checkin_photo',

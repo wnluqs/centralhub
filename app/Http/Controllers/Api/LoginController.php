@@ -31,7 +31,13 @@ class LoginController extends Controller
         // Return response
         return response()->json([
             'token' => $token,
-            'user' => $user,
+            'user' => [
+                'id'       => $user->id,
+                'name'     => $user->name,
+                'staff_id' => $user->staff_id,
+                'branch'   => $user->branch ?? 'Unknown',  // ✅ Explicitly added
+                'role'     => $user->getRoleNames()->first() ?? null,
+            ],
             'message' => 'Login successful'
         ], 200);
     }
