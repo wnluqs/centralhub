@@ -62,7 +62,7 @@
                     <td style="display:none;">{{ $c->created_at }}</td>
                     <td>
                         @if ($c->status === 'New')
-                            @if (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('ControlCenter'))
+                            @if (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('ControlCenter') || auth()->user()->hasRole('TechnicalLead'))
                                 <a href="{{ route('technical.complaints.assign', $c->id) }}"
                                     class="btn btn-sm btn-warning">Assign</a>
                             @elseif (auth()->user()->hasRole('Technical'))
@@ -72,7 +72,7 @@
                                 <span class="text-muted">No Action</span>
                             @endif
                         @elseif ($c->status === 'In Progress')
-                            @if (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('ControlCenter'))
+                            @if (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('ControlCenter') || auth()->user()->hasRole('TechnicalLead'))
                                 <form action="{{ route('complaints.markFixed', $c->id) }}" method="POST"
                                     style="display:inline;">
                                     @csrf

@@ -63,7 +63,7 @@
                     <td>
                         @if ($item->verified)
                             <span class="badge bg-success">Verified</span>
-                        @elseif (auth()->user()->hasRole(['Admin', 'ControlCenter']))
+                        @elseif (auth()->user()->hasRole(['Admin', 'ControlCenter', 'TechnicalLead']))
                             <form method="POST" action="{{ route('bts.verify', $item->id) }}" style="display:inline;">
                                 @csrf
                                 @method('PUT')
