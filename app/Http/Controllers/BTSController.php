@@ -164,7 +164,20 @@ class BTSController extends Controller
     public function apiIndex()
     {
         $bts = BTS::latest()->get();
-        return response()->json($bts);
+
+        // Map the action_status to frontend-friendly values
+        $mapped = $bts->map(function ($record) {
+            $statusMap = [
+                'New' => 'Normal',
+                'In Progress' => 'Warning',
+                'Failed' => 'Error' // Optional
+            ];
+
+            $record->action_status = $statusMap[$record->action_status] ?? $record->action_status;
+            return $record;
+        });
+
+        return response()->json($mapped);
     }
 
     public function apiStore(Request $request)
